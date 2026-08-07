@@ -3,9 +3,11 @@
 module Anomonitor
   class Configuration
     attr_accessor :webhook_url, :poll_interval, :cooldown, :retention_days,
-                  :dashboard_path, :auto_start
+                  :dashboard_path,
+                  :tenants, :exclude_tenants, :tenant_switch,
+                  :schema_drift_exclude
 
-    attr_reader :collectors, :tables, :alerts
+    attr_reader :collectors, :tables, :alerts, :poll_mode, :auto_start
 
     def initialize
       @webhook_url = nil
@@ -13,10 +15,43 @@ module Anomonitor
       @cooldown = 15 * 60
       @retention_days = 7
       @dashboard_path = "/anomonitor"
+      @poll_mode = :thread
       @auto_start = true
       @collectors = CollectorsConfig.new
       @tables = []
       @alerts = []
+
+      # Multi-tenancy: array or callable returning schema/tenant names
+      @tenants = nil
+      @exclude_tenants = %w[public]
+      # Optional: ->(name, &block) { Apartment::Tenant.switch(name, &block) }
+      # Default uses Apartment::Tenant.switch when available
+      @tenant_switch = nil
+
+      # Exact names or File.fnmatch globs skipped by schema drift
+      @schema_drift_exclude = %w[
+        schema_migrations
+        ar_internal_metadata
+        anomonitor_*
+      ]
+    end
+
+    # :thread — in-process background poller (default)
+    # :cron   — no background thread; schedule `rails anomonitor:poll`
+    def poll_mode=(mode)
+      mode = mode.to_sym
+      unless %i[thread cron].include?(mode)
+        raise ArgumentError, "poll_mode must be :thread or :cron (got #{mode.inspect})"
+      end
+
+      @poll_mode = mode
+      @auto_start = (mode == :thread)
+    end
+
+    # Legacy alias: auto_start=false is the same as poll_mode=:cron
+    def auto_start=(value)
+      @auto_start = !!value
+      @poll_mode = @auto_start ? :thread : :cron
     end
 
     def table(name, &block)
@@ -33,27 +68,37 @@ module Anomonitor
     end
 
     class CollectorsConfig
-      attr_accessor :sidekiq, :delayed_job, :solid_queue
+      attr_accessor :sidekiq, :delayed_job, :solid_queue, :schema_drift
 
       def initialize
         @sidekiq = true
         @delayed_job = true
         @solid_queue = true
+        @schema_drift = false
       end
     end
 
     class TableSource
-      attr_accessor :name, :model, :timestamp, :status, :active
+      # style: :status (default) uses status/active columns
+      # style: :delayed_job uses failed_at / locked_at / run_at like Delayed::Job
+      # tenant: optional column name to emit per-tenant metrics (e.g. :tenant)
+      attr_accessor :name, :model, :timestamp, :status, :active, :tenant, :style
 
       def initialize(name)
         @name = name
         @timestamp = :created_at
         @status = :status
         @active = %w[pending running]
+        @tenant = nil
+        @style = :status
       end
 
       def model_class
         model.to_s.constantize
+      end
+
+      def delayed_job_style?
+        style.to_s == "delayed_job"
       end
     end
 

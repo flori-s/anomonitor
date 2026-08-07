@@ -33,6 +33,34 @@ module Anomonitor
       private
 
       def build_payload(anomaly)
+        if slack_incoming_webhook?
+          { text: slack_text(anomaly) }
+        else
+          machine_payload(anomaly)
+        end
+      end
+
+      def slack_incoming_webhook?
+        @url.to_s.include?("hooks.slack.com")
+      end
+
+      def slack_text(anomaly)
+        threshold = anomaly.threshold.nil? ? "n/a" : anomaly.threshold
+        dashboard = "#{Anomonitor.config.dashboard_path}/anomalies/#{anomaly.id}"
+        tags = anomaly.tags.is_a?(Hash) ? anomaly.tags : {}
+        tenant = tags["tenant"] || tags[:tenant]
+        items = tags["items"] || tags[:items]
+
+        parts = ["*Anomonitor* #{anomaly.severity}"]
+        parts << "tenant `#{tenant}`" if tenant && !tenant.to_s.empty?
+        parts << "— #{anomaly.rule} on #{anomaly.source}/#{anomaly.metric}:"
+        parts << "#{anomaly.value} (threshold #{threshold})"
+        parts << "items: #{items}" if items && !items.to_s.empty?
+        parts << "<#{dashboard}|Open anomaly>"
+        parts.join(" ")
+      end
+
+      def machine_payload(anomaly)
         {
           gem: "anomonitor",
           event: "anomaly.detected",

@@ -13,8 +13,9 @@ module Anomonitor
     end
 
     def cooldown_key
+      tenant = tags[:tenant] || tags["tenant"]
       queue = tags[:queue] || tags["queue"]
-      [source, metric, queue].compact.join(":")
+      [source, metric, tenant, queue].compact.join(":")
     end
   end
 end

@@ -17,6 +17,11 @@ class Anomonitor::InstallGenerator < Rails::Generators::Base
         2. rails db:migrate
         3. mount Anomonitor::Engine => "/anomonitor" in config/routes.rb
         4. Set ANOMONITOR_WEBHOOK_URL and tune config/initializers/anomonitor.rb
+
+      Polling:
+        - Default poll_mode = :thread (in-process poller)
+        - For cron / multi-worker apps set poll_mode = :cron and schedule:
+            * * * * * cd /app && bin/rails anomonitor:poll
     MSG
   end
 end

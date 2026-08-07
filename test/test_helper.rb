@@ -19,7 +19,9 @@ require "anomonitor/collectors/base"
 require "anomonitor/collectors/sidekiq"
 require "anomonitor/collectors/delayed_job"
 require "anomonitor/collectors/solid_queue"
+require "anomonitor/collectors/schema_drift"
 require "anomonitor/collectors/table"
+require "anomonitor/tenancy"
 require "anomonitor/notifiers/webhook"
 require "anomonitor/detector"
 require "anomonitor/poller"
@@ -76,6 +78,14 @@ ActiveRecord::Schema.define do
     t.string :status
     t.timestamps
   end
+
+  create_table :index_jobs, force: true do |t|
+    t.string :tenant
+    t.datetime :run_at
+    t.datetime :locked_at
+    t.datetime :failed_at
+    t.string :locked_by
+  end
 end
 
 module Anomonitor
@@ -116,6 +126,10 @@ class Job < ActiveRecord::Base
   self.table_name = "jobs"
 end
 
+class IndexJob < ActiveRecord::Base
+  self.table_name = "index_jobs"
+end
+
 class AnomonitorTestCase < Minitest::Test
   def setup
     Anomonitor.reset_config!
@@ -123,5 +137,6 @@ class AnomonitorTestCase < Minitest::Test
     Anomonitor::MetricSample.delete_all
     Anomonitor::Anomaly.delete_all
     Job.delete_all
+    IndexJob.delete_all
   end
 end

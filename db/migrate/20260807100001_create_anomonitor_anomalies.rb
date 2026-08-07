@@ -1,4 +1,4 @@
-class CreateAnomonitorAnomalies < ActiveRecord::Migration[7.0]
+class CreateAnomonitorAnomalies < ActiveRecord::Migration[6.1]
   def change
     create_table :anomonitor_anomalies do |t|
       t.string :rule, null: false

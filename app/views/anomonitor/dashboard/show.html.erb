@@ -4,11 +4,12 @@
 <p class="am-lead">Queue depth, growth, and anomaly status across configured collectors.</p>
 
 <div class="am-status-row">
-  <span>Poller: <span class="am-badge <%= @status[:running] ? 'ok' : 'warn' %>"><%= @status[:running] ? "running" : "stopped" %></span></span>
-  <span>Last run: <%= @status[:last_run_at] ? time_ago_in_words(@status[:last_run_at]) + " ago" : "never" %></span>
-  <span>Interval: <%= @status[:poll_interval] %>s</span>
-  <% if @status[:last_error].present? %>
-    <span class="am-badge danger"><%= @status[:last_error] %></span>
+  <span>Mode: <span class="am-badge ok"><%= poller_mode_label(@status) %></span></span>
+  <span>Poller: <span class="am-badge <%= poller_state_badge_class(@status) %>"><%= poller_state_label(@status) %></span></span>
+  <span>Last run: <%= poller_last_run_label(@status) %></span>
+  <span><%= poller_cron?(@status) ? "Schedule" : "Interval" %>: <%= poller_schedule_label(@status) %></span>
+  <% if @status[:last_error].present? || @status["last_error"].present? %>
+    <span class="am-badge danger"><%= @status[:last_error] || @status["last_error"] %></span>
   <% end %>
 </div>
 
@@ -25,7 +26,7 @@
       <% end %>
     </div>
   <% else %>
-    <p class="am-empty">No samples yet. The poller will populate metrics after the first tick.</p>
+    <p class="am-empty">No samples yet. <% if poller_cron?(@status) %>Run <code>rails anomonitor:poll</code> (or wait for cron).<% else %>The poller will populate metrics after the first tick.<% end %></p>
   <% end %>
 </section>
 

@@ -3,7 +3,7 @@
 module Anomonitor
   class DashboardController < ApplicationController
     def show
-      @status = Poller.instance.status
+      @status = Poller.instance.status.merge(poll_mode: Anomonitor.config.poll_mode)
       @latest_metrics = MetricSample.latest_by_source_metric.sort_by { |m| [m.source, m.metric] }
       @recent_anomalies = Anomaly.recent.limit(10)
       @series = build_series

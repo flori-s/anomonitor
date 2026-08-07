@@ -1,4 +1,4 @@
-class CreateAnomonitorMetricSamples < ActiveRecord::Migration[7.0]
+class CreateAnomonitorMetricSamples < ActiveRecord::Migration[6.1]
   def change
     create_table :anomonitor_metric_samples do |t|
       t.string :source, null: false

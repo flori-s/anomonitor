@@ -71,6 +71,11 @@ module Anomonitor
         prior = prior.select { |s| (s.tags || {})["queue"] == queue || (s.tags || {})[:queue] == queue }
       end
 
+      if point.tags[:tenant] || point.tags["tenant"]
+        tenant = point.tags[:tenant] || point.tags["tenant"]
+        prior = prior.select { |s| (s.tags || {})["tenant"] == tenant || (s.tags || {})[:tenant] == tenant }
+      end
+
       values = prior.map(&:value)
       return nil if values.empty?
 

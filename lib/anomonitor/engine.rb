@@ -23,6 +23,8 @@ module Anomonitor
     end
 
     config.after_initialize do
+      # :thread starts an in-process poller; :cron relies on `rails anomonitor:poll`
+      next unless Anomonitor.config.poll_mode == :thread
       next unless Anomonitor.config.auto_start
       next if defined?(Rails::Console)
       next if File.basename($PROGRAM_NAME).include?("rake")

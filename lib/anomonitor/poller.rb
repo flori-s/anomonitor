@@ -52,8 +52,9 @@ module Anomonitor
 
     def status
       {
+        poll_mode: Anomonitor.config.poll_mode,
         running: @running,
-        last_run_at: @last_run_at,
+        last_run_at: effective_last_run_at,
         last_error: @last_error,
         collectors: @collector_status,
         poll_interval: Anomonitor.config.poll_interval
@@ -61,6 +62,15 @@ module Anomonitor
     end
 
     private
+
+    def effective_last_run_at
+      return @last_run_at if @last_run_at
+      return nil unless defined?(Anomonitor::MetricSample)
+
+      Anomonitor::MetricSample.maximum(:sampled_at)
+    rescue StandardError
+      nil
+    end
 
     def loop_poll
       while @running
@@ -88,6 +98,7 @@ module Anomonitor
       list[:sidekiq] = Collectors::Sidekiq.new if cfg.sidekiq
       list[:delayed_job] = Collectors::DelayedJob.new if cfg.delayed_job
       list[:solid_queue] = Collectors::SolidQueue.new if cfg.solid_queue
+      list[:schema_drift] = Collectors::SchemaDrift.new if cfg.schema_drift
       Anomonitor.config.tables.each do |table|
         list[:"table_#{table.name}"] = Collectors::Table.new(table)
       end

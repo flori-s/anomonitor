@@ -9,8 +9,34 @@ module Anomonitor
           return []
         end
 
+        if Tenancy.multi_tenant?
+          collect_per_tenant
+        else
+          metrics_for(nil)
+        end
+      rescue StandardError => e
+        Anomonitor.logger.warn("[Anomonitor] Delayed Job collector error: #{e.message}")
+        []
+      end
+
+      private
+
+      def collect_per_tenant
+        points = []
+        Tenancy.tenant_names.each do |tenant|
+          Tenancy.switch(tenant) do
+            points.concat(metrics_for(tenant))
+          end
+        rescue StandardError => e
+          Anomonitor.logger.warn("[Anomonitor] Delayed Job collector (#{tenant}) error: #{e.message}")
+        end
+        points
+      end
+
+      def metrics_for(tenant)
         scope = ::Delayed::Job
         now = Time.current
+        tags = tenant ? { tenant: tenant } : {}
 
         pending = scope.where(failed_at: nil).where("run_at <= ?", now).where(locked_at: nil).count
         failed = scope.where.not(failed_at: nil).count
@@ -18,14 +44,11 @@ module Anomonitor
         total = scope.count
 
         [
-          point(source: "delayed_job", metric: "queue_depth", value: pending),
-          point(source: "delayed_job", metric: "failed", value: failed),
-          point(source: "delayed_job", metric: "locked", value: locked),
-          point(source: "delayed_job", metric: "total", value: total)
+          point(source: "delayed_job", metric: "queue_depth", value: pending, tags: tags),
+          point(source: "delayed_job", metric: "failed", value: failed, tags: tags),
+          point(source: "delayed_job", metric: "locked", value: locked, tags: tags),
+          point(source: "delayed_job", metric: "total", value: total, tags: tags)
         ]
-      rescue StandardError => e
-        Anomonitor.logger.warn("[Anomonitor] Delayed Job collector error: #{e.message}")
-        []
       end
     end
   end

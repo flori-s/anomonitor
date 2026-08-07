@@ -8,6 +8,7 @@ class ConfigurationTest < AnomonitorTestCase
     assert cfg.collectors.sidekiq
     assert cfg.collectors.delayed_job
     assert cfg.collectors.solid_queue
+    refute cfg.collectors.schema_drift
   end
 
   def test_configure_webhook_and_alerts
@@ -20,6 +21,11 @@ class ConfigurationTest < AnomonitorTestCase
         t.model = "Job"
         t.active = %w[pending]
       end
+      c.table :supp_jobs do |t|
+        t.model = "IndexJob"
+        t.style = :delayed_job
+        t.tenant = :tenant
+      end
     end
 
     assert_equal "https://example.com/hook", Anomonitor.config.webhook_url
@@ -27,7 +33,27 @@ class ConfigurationTest < AnomonitorTestCase
     assert_equal 2, Anomonitor.config.alerts.size
     assert Anomonitor.config.alerts.first.threshold?
     assert Anomonitor.config.alerts.last.spike?
-    assert_equal 1, Anomonitor.config.tables.size
+    assert_equal 2, Anomonitor.config.tables.size
     assert_equal "Job", Anomonitor.config.tables.first.model
+    assert Anomonitor.config.tables.last.delayed_job_style?
+    assert_equal :tenant, Anomonitor.config.tables.last.tenant
+  end
+
+  def test_poll_mode_cron_disables_auto_start
+    Anomonitor.configure { |c| c.poll_mode = :cron }
+    assert_equal :cron, Anomonitor.config.poll_mode
+    refute Anomonitor.config.auto_start
+  end
+
+  def test_auto_start_false_sets_poll_mode_cron
+    Anomonitor.configure { |c| c.auto_start = false }
+    assert_equal :cron, Anomonitor.config.poll_mode
+    refute Anomonitor.config.auto_start
+  end
+
+  def test_poll_mode_rejects_invalid
+    assert_raises(ArgumentError) do
+      Anomonitor.configure { |c| c.poll_mode = :sidekiq }
+    end
   end
 end
