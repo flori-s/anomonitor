@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anomonitor<%= " — #{yield(:title)}" if content_for?(:title) %></title>
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <%= stylesheet_link_tag "anomonitor/application", media: "all" %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="am-body">
+  <div class="am-shell">
+    <header class="am-header">
+      <a class="am-brand" href="<%= root_path %>">Anomonitor</a>
+      <nav class="am-nav">
+        <%= link_to "Overview", root_path %>
+        <%= link_to "Anomalies", anomalies_path %>
+        <%= link_to "Metrics", metrics_path %>
+      </nav>
+    </header>
+    <main class="am-main">
+      <%= yield %>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<% content_for :title, "Anomaly ##{@anomaly.id}" %>
+
+<h1>Anomaly #<%= @anomaly.id %></h1>
+<p class="am-lead"><%= @anomaly.rule %> on <%= @anomaly.source %> / <%= @anomaly.metric %></p>
+
+<dl class="am-detail">
+  <dt>Severity</dt>
+  <dd><span class="am-badge <%= @anomaly.severity %>"><%= @anomaly.severity %></span></dd>
+
+  <dt>Value</dt>
+  <dd><%= @anomaly.value %></dd>
+
+  <dt>Threshold</dt>
+  <dd><%= @anomaly.threshold || "—" %></dd>
+
+  <dt>Sampled at</dt>
+  <dd><%= @anomaly.sampled_at %></dd>
+
+  <dt>Webhook</dt>
+  <dd><%= @anomaly.webhook_status %><%= " @ #{@anomaly.webhook_delivered_at}" if @anomaly.webhook_delivered_at %></dd>
+
+  <dt>Cooldown key</dt>
+  <dd><%= @anomaly.cooldown_key %></dd>
+
+  <dt>Tags</dt>
+  <dd><%= @anomaly.tags.inspect %></dd>
+</dl>
+
+<p style="margin-top: 1.25rem"><%= link_to "← All anomalies", anomalies_path %></p>

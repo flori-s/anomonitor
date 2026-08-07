@@ -1,0 +1,219 @@
+:root {
+  --am-bg: #0f1419;
+  --am-surface: #1a222c;
+  --am-surface-2: #243040;
+  --am-border: #2e3d4f;
+  --am-text: #e8eef4;
+  --am-muted: #8b9cb0;
+  --am-accent: #3dd6c6;
+  --am-warn: #f0b429;
+  --am-danger: #f07178;
+  --am-ok: #7fd962;
+  --am-font: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --am-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+.am-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--am-font);
+  color: var(--am-text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1c3a42 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #2a2438 0%, transparent 50%),
+    var(--am-bg);
+}
+
+.am-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+}
+
+.am-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--am-border);
+  margin-bottom: 1.75rem;
+}
+
+.am-brand {
+  font-family: var(--am-mono);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--am-accent);
+  text-decoration: none;
+}
+
+.am-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.am-nav a {
+  color: var(--am-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.am-nav a:hover { color: var(--am-text); }
+
+.am-main h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+.am-lead {
+  color: var(--am-muted);
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+}
+
+.am-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+}
+
+.am-stat {
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+}
+
+.am-stat .label {
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--am-muted);
+}
+
+.am-stat .value {
+  font-family: var(--am-mono);
+  font-size: 1.55rem;
+  margin-top: 0.35rem;
+}
+
+.am-stat .meta {
+  font-size: 0.8rem;
+  color: var(--am-muted);
+  margin-top: 0.25rem;
+}
+
+.am-section {
+  margin-bottom: 2rem;
+}
+
+.am-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--am-text);
+}
+
+.am-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.am-table th,
+.am-table td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--am-border);
+}
+
+.am-table th {
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--am-muted);
+  font-weight: 500;
+}
+
+.am-table a { color: var(--am-accent); text-decoration: none; }
+.am-table a:hover { text-decoration: underline; }
+
+.am-badge {
+  display: inline-block;
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: var(--am-surface-2);
+  color: var(--am-text);
+}
+
+.am-badge.high,
+.am-badge.danger { color: var(--am-danger); }
+.am-badge.warn { color: var(--am-warn); }
+.am-badge.ok { color: var(--am-ok); }
+
+.am-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 56px;
+  margin-top: 0.5rem;
+}
+
+.am-bar {
+  flex: 1;
+  min-width: 3px;
+  background: linear-gradient(180deg, var(--am-accent), #1f6f68);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+}
+
+.am-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-family: var(--am-mono);
+  font-size: 0.8rem;
+  color: var(--am-muted);
+  margin-bottom: 1.25rem;
+}
+
+.am-empty {
+  color: var(--am-muted);
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+.am-detail {
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+  border-radius: 6px;
+  padding: 1.1rem 1.25rem;
+}
+
+.am-detail dt {
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--am-muted);
+  margin-top: 0.75rem;
+}
+
+.am-detail dd {
+  margin: 0.2rem 0 0;
+  font-family: var(--am-mono);
+}
+
+@media (max-width: 640px) {
+  .am-header { flex-direction: column; align-items: flex-start; }
+}

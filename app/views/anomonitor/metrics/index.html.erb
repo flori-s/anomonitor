@@ -1,0 +1,31 @@
+<% content_for :title, "Metrics" %>
+
+<h1>Metrics</h1>
+<p class="am-lead">Recent metric samples from the last 24 hours.</p>
+
+<% if @metrics.any? %>
+  <table class="am-table">
+    <thead>
+      <tr>
+        <th>Sampled</th>
+        <th>Source</th>
+        <th>Metric</th>
+        <th>Value</th>
+        <th>Tags</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @metrics.each do |sample| %>
+        <tr>
+          <td><%= l(sample.sampled_at, format: :short) %></td>
+          <td><%= sample.source %></td>
+          <td><%= sample.metric %></td>
+          <td><%= number_with_precision(sample.value, precision: 2, strip_insignificant_zeros: true) %></td>
+          <td><code><%= sample.tags.presence || {} %></code></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="am-empty">No metric samples yet.</p>
+<% end %>

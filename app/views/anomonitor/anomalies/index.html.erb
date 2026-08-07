@@ -1,0 +1,35 @@
+<% content_for :title, "Anomalies" %>
+
+<h1>Anomalies</h1>
+<p class="am-lead">Threshold breaches and growth spikes with webhook delivery status.</p>
+
+<% if @anomalies.any? %>
+  <table class="am-table">
+    <thead>
+      <tr>
+        <th>When</th>
+        <th>Rule</th>
+        <th>Source</th>
+        <th>Metric</th>
+        <th>Value</th>
+        <th>Threshold</th>
+        <th>Webhook</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @anomalies.each do |anomaly| %>
+        <tr>
+          <td><%= link_to l(anomaly.created_at, format: :short), anomaly_path(anomaly) %></td>
+          <td><%= anomaly.rule %></td>
+          <td><%= anomaly.source %></td>
+          <td><%= anomaly.metric %></td>
+          <td><%= number_with_precision(anomaly.value, precision: 0, delimiter: ",") %></td>
+          <td><%= anomaly.threshold ? number_with_precision(anomaly.threshold, precision: 0, delimiter: ",") : "—" %></td>
+          <td><span class="am-badge <%= anomaly.webhook_status == 'delivered' ? 'ok' : 'warn' %>"><%= anomaly.webhook_status %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p class="am-empty">No anomalies recorded yet.</p>
+<% end %>

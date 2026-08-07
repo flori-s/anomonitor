@@ -1,0 +1,85 @@
+<% content_for :title, "Overview" %>
+
+<h1>Overview</h1>
+<p class="am-lead">Queue depth, growth, and anomaly status across configured collectors.</p>
+
+<div class="am-status-row">
+  <span>Poller: <span class="am-badge <%= @status[:running] ? 'ok' : 'warn' %>"><%= @status[:running] ? "running" : "stopped" %></span></span>
+  <span>Last run: <%= @status[:last_run_at] ? time_ago_in_words(@status[:last_run_at]) + " ago" : "never" %></span>
+  <span>Interval: <%= @status[:poll_interval] %>s</span>
+  <% if @status[:last_error].present? %>
+    <span class="am-badge danger"><%= @status[:last_error] %></span>
+  <% end %>
+</div>
+
+<section class="am-section">
+  <h2>Current metrics</h2>
+  <% if @latest_metrics.any? %>
+    <div class="am-grid">
+      <% @latest_metrics.first(12).each do |sample| %>
+        <div class="am-stat">
+          <div class="label"><%= sample.source %> · <%= sample.metric %></div>
+          <div class="value"><%= number_with_precision(sample.value, precision: 0, delimiter: ",") %></div>
+          <div class="meta"><%= time_ago_in_words(sample.sampled_at) %> ago</div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="am-empty">No samples yet. The poller will populate metrics after the first tick.</p>
+  <% end %>
+</section>
+
+<section class="am-section">
+  <h2>Recent history</h2>
+  <% if @series.any? %>
+    <div class="am-grid">
+      <% @series.first(6).each do |(key, rows)| %>
+        <% source, metric = key %>
+        <% max = rows.map(&:value).max.to_f %>
+        <div class="am-stat">
+          <div class="label"><%= source %> · <%= metric %></div>
+          <div class="am-bars">
+            <% rows.each do |row| %>
+              <% height = max.positive? ? [(row.value / max * 100).round, 4].max : 4 %>
+              <div class="am-bar" style="height: <%= height %>%" title="<%= row.value %> @ <%= row.sampled_at %>"></div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="am-empty">No history yet.</p>
+  <% end %>
+</section>
+
+<section class="am-section">
+  <h2>Recent anomalies</h2>
+  <% if @recent_anomalies.any? %>
+    <table class="am-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Rule</th>
+          <th>Source</th>
+          <th>Metric</th>
+          <th>Value</th>
+          <th>Severity</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_anomalies.each do |anomaly| %>
+          <tr>
+            <td><%= link_to time_ago_in_words(anomaly.created_at) + " ago", anomaly_path(anomaly) %></td>
+            <td><%= anomaly.rule %></td>
+            <td><%= anomaly.source %></td>
+            <td><%= anomaly.metric %></td>
+            <td><%= number_with_precision(anomaly.value, precision: 0, delimiter: ",") %></td>
+            <td><span class="am-badge <%= anomaly.severity %>"><%= anomaly.severity %></span></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p class="am-empty">No anomalies detected.</p>
+  <% end %>
+</section>

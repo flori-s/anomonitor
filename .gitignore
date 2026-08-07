@@ -1,0 +1,11 @@
+/.bundle/
+/.idea/
+/.ruby-version
+/.ruby-gemset
+/Gemfile.lock
+/pkg/
+/tmp/
+/log/
+*.gem
+*.swp
+.DS_Store
