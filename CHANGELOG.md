@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+- Wrap long metric/anomaly tag lines so tables stay within the viewport
+
 ## 0.2.2
 
 - Stop auto-appending engine migrations (use `rails anomonitor:install:migrations`) so Apartment hosts can own public-only copies without duplicate migration names

@@ -4,28 +4,30 @@
 <p class="am-lead">Recent metric samples from the last 24 hours.</p>
 
 <% if @metrics.any? %>
-  <table class="am-table">
-    <thead>
-      <tr>
-        <th>Sampled</th>
-        <th>Source</th>
-        <th>Metric</th>
-        <th>Value</th>
-        <th>Tags</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @metrics.each do |sample| %>
+  <div class="am-table-wrap">
+    <table class="am-table">
+      <thead>
         <tr>
-          <td><%= l(sample.sampled_at, format: :short) %></td>
-          <td><%= sample.source %></td>
-          <td><%= sample.metric %></td>
-          <td><%= number_with_precision(sample.value, precision: 2, strip_insignificant_zeros: true) %></td>
-          <td><code><%= sample.tags.presence || {} %></code></td>
+          <th>Sampled</th>
+          <th>Source</th>
+          <th>Metric</th>
+          <th>Value</th>
+          <th>Tags</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        <% @metrics.each do |sample| %>
+          <tr>
+            <td><%= l(sample.sampled_at, format: :short) %></td>
+            <td><%= sample.source %></td>
+            <td><%= sample.metric %></td>
+            <td><%= number_with_precision(sample.value, precision: 2, strip_insignificant_zeros: true) %></td>
+            <td><code class="am-tags"><%= sample.tags.presence || {} %></code></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 <% else %>
   <p class="am-empty">No metric samples yet.</p>
 <% end %>
