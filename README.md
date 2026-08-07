@@ -2,6 +2,8 @@
 
 Rails engine gem that watches **Sidekiq**, **Delayed Job**, **Solid Queue**, and **custom job tables** for anomalies — threshold breaches, growth spikes, and **schema drift** — then notifies via **webhook** and shows an ops **dashboard**.
 
+<img width="1512" height="836" alt="anomonitor" src="https://github.com/user-attachments/assets/62938225-02a7-4e5c-8baf-d8ec24658a79" />
+
 ## Install
 
 ```ruby
