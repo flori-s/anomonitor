@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Stop auto-appending engine migrations (use `rails anomonitor:install:migrations`) so Apartment hosts can own public-only copies without duplicate migration names
+
 ## 0.2.1
 
 - Support Rails `>= 6.1` (migrations use `ActiveRecord::Migration[6.1]`)

@@ -14,13 +14,10 @@ module Anomonitor
       end
     end
 
-    initializer "anomonitor.migrations" do |app|
-      unless app.root.to_s.match?(root.to_s)
-        config.paths["db/migrate"].expanded.each do |path|
-          app.config.paths["db/migrate"] << path
-        end
-      end
-    end
+    # Migrations are installed into the host via:
+    #   rails anomonitor:install:migrations
+    # Do not also append the engine migrate path (duplicates + breaks
+    # Apartment apps that wrap migrations with public-only guards).
 
     config.after_initialize do
       # :thread starts an in-process poller; :cron relies on `rails anomonitor:poll`
