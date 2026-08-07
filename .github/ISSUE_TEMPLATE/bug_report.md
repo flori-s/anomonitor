@@ -1,38 +1,46 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
-
+about: Something broken in collectors, alerts, webhooks, or the dashboard
+title: "[Bug] "
+labels: ["bug"]
+assignees: ""
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of what went wrong.
 
-**To Reproduce**
+**To reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1.
+2.
+3.
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+What you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Environment**
+- Anomonitor version / commit:
+- Ruby version:
+- Rails version:
+- Queue adapter(s): Sidekiq / Delayed Job / Solid Queue / none
+- Custom job tables configured? (yes/no):
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**Relevant config**
+Paste a redacted snippet from `config/initializers/anomonitor.rb` (remove webhook secrets/URLs if needed).
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+```ruby
+
+```
+
+**Logs / error**
+Poller errors, webhook failures, or stack traces:
+
+```text
+
+```
+
+**Dashboard**
+If UI-related: page URL, browser, and a screenshot if useful.
 
 **Additional context**
-Add any other context about the problem here.
+Anything else that might help (hosting, Redis, DB adapter, etc.).

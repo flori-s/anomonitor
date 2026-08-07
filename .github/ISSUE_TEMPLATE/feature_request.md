@@ -1,20 +1,29 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
-
+about: Propose a collector, alert rule, notifier, or dashboard improvement
+title: "[Feature] "
+labels: ["enhancement"]
+assignees: ""
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+**Problem**
+What gap or friction are you hitting with Anomonitor today?
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+**Proposed solution**
+What should Anomonitor do instead? Be specific where you can (API/config shape helps).
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+**Area**
+Which part does this touch? (check all that apply)
+
+- [ ] Collector (Sidekiq / Delayed Job / Solid Queue / custom tables)
+- [ ] Alert rules (threshold / growth spike / new rule type)
+- [ ] Notifier (webhook / new channel)
+- [ ] Dashboard / UI
+- [ ] Config / install / docs
+- [ ] Other:
+
+**Alternatives considered**
+Other approaches you’ve thought about, or workarounds you use now.
 
 **Additional context**
-Add any other context or screenshots about the feature request here.
+Examples, mock payloads, screenshots, or links to related issues.

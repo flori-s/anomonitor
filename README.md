@@ -80,6 +80,10 @@ Open `/anomonitor` for:
 rails anomonitor:poll
 ```
 
+## Wiki
+
+In-repo docs live under [`wiki/`](wiki/Home.md) (Installation, Configuration, Collectors, Alerts, Dashboard, Development).
+
 ## Development
 
 ```bash
