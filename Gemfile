@@ -6,5 +6,5 @@ gemspec
 gem "sqlite3", "~> 1.4"
 
 group :development, :test do
-  gem "minitest", "~> 5.0"
+  gem "minitest", "~> 6.0"
 end
