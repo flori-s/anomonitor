@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+- CI: allow `sqlite3 >= 2.1` for Rails 8; matrix Rails 7.1 / 7.2 / 8.0
+
 ## 0.6.0
 
 - Mutes / snoozes (`anomonitor_mutes` + `/mutes` UI + `c.mute(...)`)

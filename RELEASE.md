@@ -4,15 +4,15 @@
 
 1. Update `lib/anomonitor/version.rb`
 2. Add a section to `CHANGELOG.md`
-3. Commit and tag: `git tag v0.6.0 && git push origin v0.6.0`
+3. Commit and tag: `git tag v0.6.1 && git push origin v0.6.1`
 
 ## RubyGems
 
 Requires owner credentials on rubygems.org for the `anomonitor` gem.
 
 ```bash
-bundle exec rake build
-gem push pkg/anomonitor-0.6.0.gem
+gem build anomonitor.gemspec
+gem push anomonitor-0.6.1.gem
 ```
 
 Or:
@@ -28,5 +28,5 @@ bundle exec rake release
 Until published, hosts can use:
 
 ```ruby
-gem "anomonitor", github: "flori-s/anomonitor", tag: "v0.6.0"
+gem "anomonitor", github: "flori-s/anomonitor", tag: "v0.6.1"
 ```
