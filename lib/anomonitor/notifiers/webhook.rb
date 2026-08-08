@@ -56,7 +56,7 @@ module Anomonitor
         parts << "— #{anomaly.rule} on #{anomaly.source}/#{anomaly.metric}:"
         parts << "#{anomaly.value} (threshold #{threshold})"
         parts << "items: #{items}" if items && !items.to_s.empty?
-        parts << "<#{dashboard}|Open anomaly>"
+        parts << "<#{dashboard}>"
         parts.join(" ")
       end
 

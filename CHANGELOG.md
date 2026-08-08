@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- Update slack text ```"<#{dashboard}|Open anomaly>" -> "<#{dashboard}>"```
+
 ## 0.3.0
 
 - Jobs dashboard: collector health cards + read-only live job browser for Sidekiq, Delayed Job, Solid Queue, and custom tables
