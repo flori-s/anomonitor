@@ -7,9 +7,6 @@ require "uri"
 module Anomonitor
   module Notifiers
     class Webhook
-      DETECTED = "anomaly.detected"
-      RESOLVED = "anomaly.resolved"
-
       def initialize(url: Anomonitor.config.webhook_url)
         @url = url
       end
@@ -39,7 +36,7 @@ module Anomonitor
         if slack_incoming_webhook?
           { text: slack_text(anomaly, event) }
         else
-          machine_payload(anomaly, event)
+          Notifiers.payload(anomaly, event: event)
         end
       end
 
@@ -63,23 +60,6 @@ module Anomonitor
         parts << "items: #{items}" if items && !items.to_s.empty?
         parts << "<#{dashboard}>"
         parts.join(" ")
-      end
-
-      def machine_payload(anomaly, event)
-        {
-          gem: "anomonitor",
-          event: event,
-          severity: anomaly.severity,
-          rule: anomaly.rule,
-          source: anomaly.source,
-          metric: anomaly.metric,
-          value: anomaly.value,
-          threshold: anomaly.threshold,
-          sampled_at: anomaly.sampled_at&.iso8601,
-          resolved_at: anomaly.resolved_at&.iso8601,
-          dashboard_url: Anomonitor.config.anomaly_dashboard_url(anomaly.id),
-          tags: anomaly.tags
-        }
       end
 
       def post_json(payload)

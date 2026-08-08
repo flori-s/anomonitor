@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Pluggable `c.notifier` (callable / `#deliver` / array) + `Anomonitor::Notifiers.payload` for host transports like `Webhook::Broadcast`
+
 ## 0.4.0
 
 - Absolute webhook dashboard URLs via `dashboard_base_url` / `ANOMONITOR_DASHBOARD_BASE_URL`

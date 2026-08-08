@@ -6,12 +6,13 @@ module Anomonitor
                   :dashboard_path, :dashboard_base_url,
                   :tenants, :exclude_tenants, :tenant_switch,
                   :schema_drift_exclude, :schema_drift_interval,
-                  :authenticate
+                  :authenticate, :notifier
 
     attr_reader :collectors, :tables, :alerts, :poll_mode, :auto_start
 
     def initialize
       @webhook_url = nil
+      @notifier = nil
       @poll_interval = 60
       @cooldown = 15 * 60
       @retention_days = 7
@@ -47,6 +48,10 @@ module Anomonitor
       path = "/#{path}" unless path.start_with?("/")
       base = dashboard_base_url.to_s.strip.sub(%r{/+\z}, "")
       base.empty? ? path : "#{base}#{path}"
+    end
+
+    def build_notifier
+      Notifiers.build(self)
     end
 
     # :thread — in-process background poller (default)

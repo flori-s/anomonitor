@@ -4,6 +4,16 @@ Anomonitor.configure do |c|
   c.webhook_url = ENV["ANOMONITOR_WEBHOOK_URL"]
   # Absolute origin for Slack/JSON dashboard links (path-only if blank)
   c.dashboard_base_url = ENV["ANOMONITOR_DASHBOARD_BASE_URL"] # e.g. "https://ops.example.com"
+
+  # Optional: replace built-in HTTP webhook with your transport (e.g. Webhook::Broadcast).
+  # c.notifier = ->(anomaly, event:) {
+  #   Webhook::Broadcast.new(
+  #     urls: [{ url: ENV.fetch("ANOMONITOR_DEST_URL"), headers: [
+  #       { name: "Content-Type", value: "application/json" }
+  #     ] }],
+  #     message: Anomonitor::Notifiers.payload(anomaly, event: event)
+  #   ).call
+  # }
   c.poll_interval = 60
   c.cooldown = 15 * 60
   c.retention_days = 7

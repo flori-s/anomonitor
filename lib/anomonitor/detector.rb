@@ -2,8 +2,8 @@
 
 module Anomonitor
   class Detector
-    def initialize(notifier: Notifiers::Webhook.new)
-      @notifier = notifier
+    def initialize(notifier: nil)
+      @notifier = notifier || Anomonitor.config.build_notifier
     end
 
     def evaluate(points)
@@ -164,7 +164,7 @@ module Anomonitor
         next unless bases.include?(anomaly_sticky_base(anomaly))
 
         anomaly.update!(resolved_at: Time.current)
-        @notifier.deliver(anomaly, event: Notifiers::Webhook::RESOLVED)
+        @notifier.deliver(anomaly, event: Notifiers::RESOLVED)
       end
     rescue StandardError => e
       Anomonitor.logger.warn("[Anomonitor] Failed to resolve sticky anomalies: #{e.message}")

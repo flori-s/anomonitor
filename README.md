@@ -133,9 +133,26 @@ end
 
 ### Webhooks
 
-Set `ANOMONITOR_WEBHOOK_URL`. Set `ANOMONITOR_DASHBOARD_BASE_URL` (or `c.dashboard_base_url`) so Slack/JSON links are absolute.
+Built-in: set `ANOMONITOR_WEBHOOK_URL`. Set `ANOMONITOR_DASHBOARD_BASE_URL` (or `c.dashboard_base_url`) so Slack/JSON links are absolute.
 
-Slack Incoming Webhooks (`hooks.slack.com`) get a formatted `text` payload. Other URLs receive JSON:
+**Custom notifier** (e.g. your app’s `Webhook::Broadcast` proxy) — replaces the built-in HTTP client:
+
+```ruby
+Anomonitor.configure do |c|
+  c.notifier = ->(anomaly, event:) {
+    Webhook::Broadcast.new(
+      urls: [{ url: ENV.fetch("ANOMONITOR_DEST_URL"), headers: [
+        { name: "Content-Type", value: "application/json" }
+      ] }],
+      message: Anomonitor::Notifiers.payload(anomaly, event: event)
+    ).call
+  }
+end
+```
+
+Callables may return `true`/`false`, or a Hash with `:accepted` (Broadcast’s return value). Objects with `#deliver(anomaly, event:)` also work; pass an Array to fan out to several notifiers.
+
+Slack Incoming Webhooks (`hooks.slack.com`) get a formatted `text` payload when using the built-in notifier. Other built-in URLs receive JSON:
 
 ```json
 {
