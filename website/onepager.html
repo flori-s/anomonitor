@@ -1,0 +1,556 @@
+<!-- wp:html -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+.site-header,
+.site-footer,
+.wp-block-post-title,
+.entry-title,
+h1.wp-block-post-title { display: none !important; }
+
+:root {
+  --wp--preset--color--page-background: #0f1419 !important;
+  --wp--preset--color--page-text: #e8eef4 !important;
+  --wp--preset--color--base: #0f1419 !important;
+  --wp--preset--color--contrast: #e8eef4 !important;
+}
+
+/* Theme page background was white — paint it to match Anomonitor */
+html, body,
+body.home,
+body.page {
+  background: #0f1419 !important;
+  background-color: #0f1419 !important;
+  color: #e8eef4 !important;
+  margin: 0 !important;
+}
+.wp-site-blocks,
+.wp-block-group,
+.wp-block-post-content,
+main.wp-block-group,
+.entry-content,
+.has-page-background-background-color,
+.has-base-background-color {
+  background: #0f1419 !important;
+  background-color: #0f1419 !important;
+  max-width: none !important;
+}
+.wp-block-post-content.has-global-padding {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.wp-block-post-content.is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)),
+.wp-block-post-content > .amo-page {
+  max-width: none !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.amo-page {
+  --am-bg: #0f1419;
+  --am-surface: #1a222c;
+  --am-surface-2: #243040;
+  --am-border: #2e3d4f;
+  --am-text: #e8eef4;
+  --am-muted: #8b9cb0;
+  --am-accent: #3dd6c6;
+  --am-warn: #f0b429;
+  --am-danger: #f07178;
+  --am-ok: #7fd962;
+  --am-font: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --am-mono: "IBM Plex Mono", ui-monospace, monospace;
+  width: 100%;
+  min-height: 100vh;
+  font-family: var(--am-font);
+  color: var(--am-text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1c3a42 0%, transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, #2a2438 0%, transparent 50%),
+    var(--am-bg);
+  box-sizing: border-box;
+}
+.amo-page *, .amo-page *::before, .amo-page *::after { box-sizing: border-box; }
+.amo-page a { color: inherit; }
+
+.am-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.25rem 1.5rem 3rem;
+  overflow-x: hidden;
+}
+
+.am-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--am-border);
+  margin-bottom: 1.75rem;
+}
+
+.am-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--am-mono);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--am-accent);
+  text-decoration: none !important;
+}
+.am-brand img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: block;
+}
+
+.am-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+.am-nav a {
+  color: var(--am-muted);
+  text-decoration: none !important;
+  font-size: 0.9rem;
+}
+.am-nav a:hover { color: var(--am-text); }
+
+.am-lang {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-left: 0.35rem;
+  padding: 0.15rem;
+  border: 1px solid var(--am-border);
+  border-radius: 4px;
+  background: var(--am-surface);
+}
+.am-lang button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--am-muted);
+  padding: 0.3rem 0.45rem;
+  border-radius: 3px;
+}
+.am-lang button[aria-pressed="true"] {
+  background: var(--am-surface-2);
+  color: var(--am-accent);
+}
+
+.am-main h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+.am-lead {
+  color: var(--am-muted);
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  max-width: 42rem;
+  line-height: 1.55;
+}
+
+.am-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-family: var(--am-mono);
+  font-size: 0.8rem;
+  color: var(--am-muted);
+  margin-bottom: 1.25rem;
+}
+
+.am-badge {
+  display: inline-block;
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  background: var(--am-surface-2);
+  color: var(--am-text);
+}
+.am-badge.ok { color: var(--am-ok); }
+.am-badge.warn { color: var(--am-warn); }
+.am-badge.high, .am-badge.danger { color: var(--am-danger); }
+
+.am-section { margin-bottom: 2rem; }
+.am-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: var(--am-text);
+}
+
+.am-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.am-stat {
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  min-width: 0;
+}
+.am-stat .label {
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--am-muted);
+}
+.am-stat .value {
+  font-family: var(--am-mono);
+  font-size: 1.55rem;
+  margin-top: 0.35rem;
+}
+.am-stat .meta {
+  font-size: 0.8rem;
+  color: var(--am-muted);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.am-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 56px;
+  margin-top: 0.5rem;
+}
+.am-bar {
+  flex: 1;
+  min-width: 3px;
+  background: linear-gradient(180deg, var(--am-accent), #1f6f68);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.85;
+}
+
+.am-table-wrap { width: 100%; overflow-x: auto; }
+.am-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.am-table th,
+.am-table td {
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--am-border);
+  vertical-align: top;
+}
+.am-table th {
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--am-muted);
+  font-weight: 500;
+}
+.am-table a { color: var(--am-accent); text-decoration: none; }
+.am-table a:hover { text-decoration: underline; }
+.am-table code {
+  font-family: var(--am-mono);
+  font-size: 0.8rem;
+  color: var(--am-muted);
+}
+
+.am-code {
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+  border-radius: 6px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  font-family: var(--am-mono);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--am-text);
+  margin: 0;
+}
+.am-code .c { color: var(--am-muted); }
+.am-code .k { color: var(--am-accent); }
+
+.am-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.am-btn {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--am-font);
+  font-size: 0.9rem;
+  color: var(--am-bg) !important;
+  background: var(--am-accent);
+  border: none;
+  border-radius: 4px;
+  padding: 0.55rem 0.95rem;
+  text-decoration: none !important;
+  cursor: pointer;
+}
+.am-btn:hover { opacity: 0.9; }
+.am-btn-ghost {
+  color: var(--am-text) !important;
+  background: transparent;
+  border: 1px solid var(--am-border);
+}
+
+.am-foot {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--am-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  font-family: var(--am-mono);
+  font-size: 0.78rem;
+  color: var(--am-muted);
+}
+.am-foot a { color: var(--am-accent); text-decoration: none; }
+.am-foot a:hover { text-decoration: underline; }
+
+[data-lang="nl"] .amo-en { display: none !important; }
+[data-lang="en"] .amo-nl { display: none !important; }
+
+@media (max-width: 640px) {
+  .am-header { flex-direction: column; align-items: flex-start; }
+  .am-shell { padding: 1rem 1rem 2.5rem; }
+}
+</style>
+
+<div class="amo-page" data-lang="en" id="amo-root">
+  <div class="am-shell">
+    <header class="am-header">
+      <a class="am-brand" href="/">
+        <img src="https://anomonitor.nl/wp-content/uploads/2026/08/anomonitor-icon.png" alt="" width="36" height="36" />
+        Anomonitor
+      </a>
+      <nav class="am-nav">
+        <a href="#overview"><span class="amo-en">Overview</span><span class="amo-nl">Overzicht</span></a>
+        <a href="#collectors"><span class="amo-en">Collectors</span><span class="amo-nl">Collectors</span></a>
+        <a href="#anomalies"><span class="amo-en">Anomalies</span><span class="amo-nl">Anomalieën</span></a>
+        <a href="#install"><span class="amo-en">Install</span><span class="amo-nl">Installeren</span></a>
+        <div class="am-lang" role="group" aria-label="Language">
+          <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-set-lang="nl" aria-pressed="false">NL</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="am-main" id="overview">
+      <h1 class="amo-en">Overview</h1>
+      <h1 class="amo-nl">Overzicht</h1>
+      <p class="am-lead amo-en">Rails engine gem that watches Sidekiq, Delayed Job, Solid Queue, and custom job tables for anomalies — then notifies via webhook and shows an ops dashboard.</p>
+      <p class="am-lead amo-nl">Rails engine gem die Sidekiq, Delayed Job, Solid Queue en eigen job-tabellen bewaakt op anomalieën — waarschuwt via webhook en toont een ops-dashboard.</p>
+
+      <div class="am-status-row">
+        <span class="amo-en">Mode: <span class="am-badge ok">thread / cron</span></span>
+        <span class="amo-nl">Modus: <span class="am-badge ok">thread / cron</span></span>
+        <span class="amo-en">Status: <span class="am-badge ok">open source</span></span>
+        <span class="amo-nl">Status: <span class="am-badge ok">open source</span></span>
+        <span>Ruby ≥ 3.0</span>
+        <span>Rails ≥ 6.1</span>
+        <span>MIT</span>
+      </div>
+
+      <div class="am-cta">
+        <a class="am-btn" href="https://github.com/flori-s/anomonitor" target="_blank" rel="noopener">
+          <span class="amo-en">View on GitHub</span>
+          <span class="amo-nl">Bekijk op GitHub</span>
+        </a>
+        <a class="am-btn am-btn-ghost" href="#install">
+          <span class="amo-en">Quick install</span>
+          <span class="amo-nl">Snel installeren</span>
+        </a>
+      </div>
+
+      <section class="am-section" style="margin-top:2rem" id="collectors">
+        <h2 class="amo-en">Current metrics</h2>
+        <h2 class="amo-nl">Huidige metrics</h2>
+        <div class="am-grid">
+          <div class="am-stat">
+            <div class="label">sidekiq · queue_depth</div>
+            <div class="value" style="color:var(--am-accent)">watch</div>
+            <div class="meta amo-en">Queue depth and growth across workers</div>
+            <div class="meta amo-nl">Queue-diepte en groei over workers</div>
+          </div>
+          <div class="am-stat">
+            <div class="label">delayed_job · queue_depth</div>
+            <div class="value" style="color:var(--am-accent)">watch</div>
+            <div class="meta amo-en">Multi-tenant / Apartment ready</div>
+            <div class="meta amo-nl">Klaar voor multi-tenant / Apartment</div>
+          </div>
+          <div class="am-stat">
+            <div class="label">solid_queue · queue_depth</div>
+            <div class="value" style="color:var(--am-accent)">watch</div>
+            <div class="meta amo-en">Native Rails queue health</div>
+            <div class="meta amo-nl">Native Rails queue-gezondheid</div>
+          </div>
+          <div class="am-stat">
+            <div class="label">schema_drift · tables</div>
+            <div class="value" style="color:var(--am-warn)">drift</div>
+            <div class="meta amo-en">Missing / extra tables &amp; columns</div>
+            <div class="meta amo-nl">Ontbrekende / extra tabellen &amp; kolommen</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="am-section">
+        <h2 class="amo-en">Recent history</h2>
+        <h2 class="amo-nl">Recente historie</h2>
+        <div class="am-grid">
+          <div class="am-stat">
+            <div class="label">sidekiq · queue_depth</div>
+            <div class="am-bars" aria-hidden="true">
+              <div class="am-bar" style="height:28%"></div>
+              <div class="am-bar" style="height:34%"></div>
+              <div class="am-bar" style="height:30%"></div>
+              <div class="am-bar" style="height:48%"></div>
+              <div class="am-bar" style="height:42%"></div>
+              <div class="am-bar" style="height:55%"></div>
+              <div class="am-bar" style="height:62%"></div>
+              <div class="am-bar" style="height:58%"></div>
+              <div class="am-bar" style="height:70%"></div>
+              <div class="am-bar" style="height:88%"></div>
+              <div class="am-bar" style="height:76%"></div>
+              <div class="am-bar" style="height:64%"></div>
+            </div>
+          </div>
+          <div class="am-stat">
+            <div class="label">delayed_job · growth_spike</div>
+            <div class="am-bars" aria-hidden="true">
+              <div class="am-bar" style="height:22%"></div>
+              <div class="am-bar" style="height:24%"></div>
+              <div class="am-bar" style="height:26%"></div>
+              <div class="am-bar" style="height:25%"></div>
+              <div class="am-bar" style="height:40%"></div>
+              <div class="am-bar" style="height:52%"></div>
+              <div class="am-bar" style="height:95%"></div>
+              <div class="am-bar" style="height:72%"></div>
+              <div class="am-bar" style="height:48%"></div>
+              <div class="am-bar" style="height:36%"></div>
+              <div class="am-bar" style="height:30%"></div>
+              <div class="am-bar" style="height:28%"></div>
+            </div>
+          </div>
+          <div class="am-stat">
+            <div class="label">solid_queue · queue_depth</div>
+            <div class="am-bars" aria-hidden="true">
+              <div class="am-bar" style="height:45%"></div>
+              <div class="am-bar" style="height:42%"></div>
+              <div class="am-bar" style="height:50%"></div>
+              <div class="am-bar" style="height:48%"></div>
+              <div class="am-bar" style="height:55%"></div>
+              <div class="am-bar" style="height:52%"></div>
+              <div class="am-bar" style="height:60%"></div>
+              <div class="am-bar" style="height:58%"></div>
+              <div class="am-bar" style="height:54%"></div>
+              <div class="am-bar" style="height:62%"></div>
+              <div class="am-bar" style="height:57%"></div>
+              <div class="am-bar" style="height:50%"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="am-section" id="anomalies">
+        <h2 class="amo-en">What gets alerted</h2>
+        <h2 class="amo-nl">Waarop wordt gealert</h2>
+        <div class="am-table-wrap">
+          <table class="am-table">
+            <thead>
+              <tr>
+                <th class="amo-en">Rule</th>
+                <th class="amo-nl">Regel</th>
+                <th>Source</th>
+                <th>Metric</th>
+                <th class="amo-en">Severity</th>
+                <th class="amo-nl">Ernst</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>queue_depth</code></td>
+                <td>sidekiq</td>
+                <td>queue_depth</td>
+                <td><span class="am-badge high">high</span></td>
+              </tr>
+              <tr>
+                <td><code>growth_spike</code></td>
+                <td>delayed_job</td>
+                <td>queue_depth</td>
+                <td><span class="am-badge warn">warn</span></td>
+              </tr>
+              <tr>
+                <td><code>missing_tables</code></td>
+                <td>schema_drift</td>
+                <td>tables</td>
+                <td><span class="am-badge high">high</span></td>
+              </tr>
+              <tr>
+                <td><code>extra_columns</code></td>
+                <td>schema_drift</td>
+                <td>columns</td>
+                <td><span class="am-badge warn">warn</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="am-section" id="install">
+        <h2 class="amo-en">Quick install</h2>
+        <h2 class="amo-nl">Snel installeren</h2>
+        <p class="am-lead amo-en" style="margin-bottom:0.85rem">Add the gem, run the installer, mount the engine, open <code>/anomonitor</code>.</p>
+        <p class="am-lead amo-nl" style="margin-bottom:0.85rem">Voeg de gem toe, draai de installer, mount de engine, open <code>/anomonitor</code>.</p>
+        <pre class="am-code"><code><span class="c"># Gemfile</span>
+<span class="k">gem</span> <span class="c">"anomonitor"</span>, github: <span class="c">"flori-s/anomonitor"</span>
+
+<span class="c"># config/routes.rb</span>
+mount Anomonitor::Engine =&gt; <span class="c">"/anomonitor"</span></code></pre>
+      </section>
+
+      <footer class="am-foot">
+        <span>© 2026 anomonitor · MIT</span>
+        <a href="https://github.com/flori-s/anomonitor" target="_blank" rel="noopener">github.com/flori-s/anomonitor</a>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById("amo-root");
+  if (!root) return;
+  var buttons = root.querySelectorAll("[data-set-lang]");
+  function setLang(lang) {
+    root.setAttribute("data-lang", lang);
+    buttons.forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-set-lang") === lang ? "true" : "false");
+    });
+    try { localStorage.setItem("amo-lang", lang); } catch (e) {}
+  }
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () { setLang(btn.getAttribute("data-set-lang")); });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem("amo-lang"); } catch (e) {}
+  if (saved === "en" || saved === "nl") setLang(saved);
+  else if ((navigator.language || "").toLowerCase().indexOf("nl") === 0) setLang("nl");
+})();
+</script>
+<!-- /wp:html -->

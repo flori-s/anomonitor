@@ -1,0 +1,267 @@
+<!-- wp:html -->
+
+<style>
+/* Hide theme chrome around the one-pager */
+.wp-site-blocks > header,
+.wp-block-template-part.header,
+header.wp-block-template-part,
+.entry-title, h1.wp-block-post-title,
+.wp-block-post-title {
+  display: none !important;
+}
+.amo-wrap { margin-top: 0 !important; }
+</style>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+.amo-wrap {
+  --amo-ink: #0a3139;
+  --amo-ink-soft: #1a4a54;
+  --amo-fog: #e8f1f3;
+  --amo-mist: #f4f8f9;
+  --amo-line: #c5d7dc;
+  --amo-paper: #ffffff;
+  --amo-accent: #1f7a8c;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  color: var(--amo-ink);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, #d7ecef 0%, transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, #eef5f7 0%, transparent 50%),
+    linear-gradient(180deg, var(--amo-mist) 0%, var(--amo-paper) 38%, var(--amo-fog) 100%);
+  margin: 0 calc(50% - 50vw);
+  width: 100vw;
+  box-sizing: border-box;
+}
+.amo-wrap *, .amo-wrap *::before, .amo-wrap *::after { box-sizing: border-box; }
+.amo-wrap a { color: inherit; }
+.amo-inner { width: min(980px, calc(100% - 2.5rem)); margin: 0 auto; }
+.amo-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 0 0.5rem;
+}
+.amo-brand img { height: 42px; width: auto; display: block; }
+.amo-lang {
+  display: inline-flex; gap: 0.25rem; padding: 0.2rem;
+  border: 1px solid var(--amo-line); border-radius: 999px; background: rgba(255,255,255,.7);
+}
+.amo-lang button {
+  border: 0; background: transparent; cursor: pointer;
+  font: 600 0.8rem/1 "IBM Plex Sans", sans-serif;
+  letter-spacing: 0.04em; color: var(--amo-ink-soft);
+  padding: 0.45rem 0.75rem; border-radius: 999px;
+}
+.amo-lang button[aria-pressed="true"] {
+  background: var(--amo-ink); color: #fff;
+}
+.amo-hero {
+  padding: 3.5rem 0 3rem;
+  display: grid;
+  gap: 1.25rem;
+  max-width: 40rem;
+}
+.amo-kicker {
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--amo-accent);
+}
+.amo-hero h1 {
+  margin: 0; font-size: clamp(2.1rem, 5vw, 3.2rem);
+  line-height: 1.08; letter-spacing: -0.03em; font-weight: 700;
+}
+.amo-lead {
+  margin: 0; font-size: 1.125rem; line-height: 1.55; color: var(--amo-ink-soft);
+  max-width: 34rem;
+}
+.amo-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+.amo-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  text-decoration: none !important; border-radius: 0.5rem;
+  padding: 0.85rem 1.2rem; font-weight: 600; font-size: 0.95rem;
+  transition: transform .15s ease, background .15s ease;
+}
+.amo-btn:hover { transform: translateY(-1px); }
+.amo-btn-primary { background: var(--amo-ink); color: #fff !important; }
+.amo-btn-ghost {
+  background: transparent; color: var(--amo-ink) !important;
+  border: 1px solid var(--amo-line);
+}
+.amo-section { padding: 1.5rem 0 2.75rem; }
+.amo-section h2 {
+  margin: 0 0 0.75rem; font-size: 1.45rem; letter-spacing: -0.02em;
+}
+.amo-section p { margin: 0 0 1rem; color: var(--amo-ink-soft); line-height: 1.6; max-width: 40rem; }
+.amo-grid {
+  display: grid; gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-top: 1.25rem;
+}
+.amo-card {
+  background: rgba(255,255,255,.72);
+  border: 1px solid var(--amo-line);
+  border-radius: 0.85rem;
+  padding: 1.15rem 1.2rem;
+}
+.amo-card h3 { margin: 0 0 0.4rem; font-size: 1.02rem; }
+.amo-card p { margin: 0; font-size: 0.95rem; }
+.amo-code {
+  margin-top: 1rem;
+  background: var(--amo-ink);
+  color: #d7ecef;
+  border-radius: 0.85rem;
+  padding: 1.1rem 1.2rem;
+  overflow-x: auto;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.amo-code .c { color: #7eb8c4; }
+.amo-foot {
+  border-top: 1px solid var(--amo-line);
+  padding: 1.5rem 0 2.5rem;
+  display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem;
+  justify-content: space-between; align-items: center;
+  color: var(--amo-ink-soft); font-size: 0.9rem;
+}
+.amo-foot a { text-decoration: underline; text-underline-offset: 2px; }
+[data-lang="nl"] .amo-en { display: none; }
+[data-lang="en"] .amo-nl { display: none; }
+@media (max-width: 640px) {
+  .amo-hero { padding-top: 2.25rem; }
+  .amo-brand img { height: 34px; }
+}
+</style>
+
+<div class="amo-wrap" data-lang="en" id="amo-root">
+  <div class="amo-inner">
+    <header class="amo-top">
+      <div class="amo-brand">
+        <img src="https://anomonitor.nl/wp-content/uploads/2026/08/anomonitor-logo.jpg" alt="anomonitor" width="220" height="68" />
+      </div>
+      <div class="amo-lang" role="group" aria-label="Language">
+        <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-set-lang="nl" aria-pressed="false">NL</button>
+      </div>
+    </header>
+
+    <section class="amo-hero">
+      <p class="amo-kicker amo-en">Rails engine gem</p>
+      <p class="amo-kicker amo-nl">Rails engine gem</p>
+      <h1 class="amo-en">Watch your job queues before they go sideways.</h1>
+      <h1 class="amo-nl">Houd je job queues in de gaten vóór het misgaat.</h1>
+      <p class="amo-lead amo-en">
+        Anomonitor is a Rails engine that watches Sidekiq, Delayed Job, Solid Queue, and custom job tables for anomalies — threshold breaches, growth spikes, and schema drift — then notifies via webhook and shows an ops dashboard.
+      </p>
+      <p class="amo-lead amo-nl">
+        Anomonitor is een Rails engine die Sidekiq, Delayed Job, Solid Queue en eigen job-tabellen bewaakt op anomalieën — drempeloverschrijdingen, groeispikes en schema drift — en waarschuwt via webhook met een ops-dashboard.
+      </p>
+      <div class="amo-cta">
+        <a class="amo-btn amo-btn-primary" href="https://github.com/flori-s/anomonitor" target="_blank" rel="noopener">
+          <span class="amo-en">View on GitHub</span>
+          <span class="amo-nl">Bekijk op GitHub</span>
+        </a>
+        <a class="amo-btn amo-btn-ghost" href="https://github.com/flori-s/anomonitor#install" target="_blank" rel="noopener">
+          <span class="amo-en">Install</span>
+          <span class="amo-nl">Installeren</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="amo-section">
+      <h2 class="amo-en">What it watches</h2>
+      <h2 class="amo-nl">Wat het bewaakt</h2>
+      <div class="amo-grid">
+        <article class="amo-card">
+          <h3>Sidekiq</h3>
+          <p class="amo-en">Queue depth and growth across your workers.</p>
+          <p class="amo-nl">Queue-diepte en groei over je workers.</p>
+        </article>
+        <article class="amo-card">
+          <h3>Delayed Job</h3>
+          <p class="amo-en">Including multi-tenant / Apartment setups.</p>
+          <p class="amo-nl">Inclusief multi-tenant / Apartment setups.</p>
+        </article>
+        <article class="amo-card">
+          <h3>Solid Queue</h3>
+          <p class="amo-en">Native Rails queue health signals.</p>
+          <p class="amo-nl">Native Rails queue-gezondheidssignalen.</p>
+        </article>
+        <article class="amo-card">
+          <h3 class="amo-en">Custom tables</h3>
+          <h3 class="amo-nl">Eigen tabellen</h3>
+          <p class="amo-en">Point Anomonitor at your own job models.</p>
+          <p class="amo-nl">Koppel Anomonitor aan je eigen job-modellen.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="amo-section">
+      <h2 class="amo-en">Alerts that matter</h2>
+      <h2 class="amo-nl">Alerts die ertoe doen</h2>
+      <div class="amo-grid">
+        <article class="amo-card">
+          <h3 class="amo-en">Thresholds</h3>
+          <h3 class="amo-nl">Drempels</h3>
+          <p class="amo-en">Fire when queue depth or related metrics cross your limits.</p>
+          <p class="amo-nl">Alert als queue-diepte of gerelateerde metrics je limieten overschrijden.</p>
+        </article>
+        <article class="amo-card">
+          <h3 class="amo-en">Growth spikes</h3>
+          <h3 class="amo-nl">Groeispikes</h3>
+          <p class="amo-en">Catch sudden backlog explosions before users feel them.</p>
+          <p class="amo-nl">Vang plotselinge backlog-explosies op vóór gebruikers er last van hebben.</p>
+        </article>
+        <article class="amo-card">
+          <h3>Schema drift</h3>
+          <p class="amo-en">Detect missing or extra tables and columns across tenants.</p>
+          <p class="amo-nl">Detecteer ontbrekende of extra tabellen en kolommen over tenants.</p>
+        </article>
+        <article class="amo-card">
+          <h3>Webhooks</h3>
+          <p class="amo-en">Slack-friendly text or structured JSON to your endpoint.</p>
+          <p class="amo-nl">Slack-vriendelijke tekst of gestructureerde JSON naar jouw endpoint.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="amo-section">
+      <h2 class="amo-en">Quick install</h2>
+      <h2 class="amo-nl">Snel installeren</h2>
+      <p class="amo-en">Add the gem, run the installer, mount the engine, and open <code>/anomonitor</code>.</p>
+      <p class="amo-nl">Voeg de gem toe, draai de installer, mount de engine en open <code>/anomonitor</code>.</p>
+      <pre class="amo-code"><code><span class="c"># Gemfile</span>
+gem "anomonitor", github: "flori-s/anomonitor"
+
+<span class="c"># config/routes.rb</span>
+mount Anomonitor::Engine =&gt; "/anomonitor"</code></pre>
+    </section>
+
+    <footer class="amo-foot">
+      <span class="amo-en">MIT licensed · Ruby ≥ 3.0 · Rails ≥ 6.1</span>
+      <span class="amo-nl">MIT-licentie · Ruby ≥ 3.0 · Rails ≥ 6.1</span>
+      <a href="https://github.com/flori-s/anomonitor" target="_blank" rel="noopener">github.com/flori-s/anomonitor</a>
+    </footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  var root = document.getElementById("amo-root");
+  if (!root) return;
+  var buttons = root.querySelectorAll("[data-set-lang]");
+  function setLang(lang) {
+    root.setAttribute("data-lang", lang);
+    buttons.forEach(function (btn) {
+      btn.setAttribute("aria-pressed", btn.getAttribute("data-set-lang") === lang ? "true" : "false");
+    });
+    try { localStorage.setItem("amo-lang", lang); } catch (e) {}
+  }
+  buttons.forEach(function (btn) {
+    btn.addEventListener("click", function () { setLang(btn.getAttribute("data-set-lang")); });
+  });
+  var saved = null;
+  try { saved = localStorage.getItem("amo-lang"); } catch (e) {}
+  if (saved === "en" || saved === "nl") setLang(saved);
+  else if ((navigator.language || "").toLowerCase().indexOf("nl") === 0) setLang("nl");
+})();
+</script>
+<!-- /wp:html -->
