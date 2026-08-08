@@ -163,7 +163,8 @@ module Anomonitor
         next if active_keys.include?(anomaly.cooldown_key)
         next unless bases.include?(anomaly_sticky_base(anomaly))
 
-        anomaly.update_columns(resolved_at: Time.current)
+        anomaly.update!(resolved_at: Time.current)
+        @notifier.deliver(anomaly, event: Notifiers::Webhook::RESOLVED)
       end
     rescue StandardError => e
       Anomonitor.logger.warn("[Anomonitor] Failed to resolve sticky anomalies: #{e.message}")

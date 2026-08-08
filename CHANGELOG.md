@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0
+
+- Absolute webhook dashboard URLs via `dashboard_base_url` / `ANOMONITOR_DASHBOARD_BASE_URL`
+- Sticky schema drift: `anomaly.resolved` webhook when drift clears; anomalies UI open/resolved filter
+- Fingerprint full item sets (`items_digest`) so changes beyond the first 25 still re-alert
+- Jobs browser: Delayed Job / table `pending` matches collectors (`run_at <= now`); hide `locked` for status-style tables
+- Dashboard auth hook (`c.authenticate`) + docs / SECURITY note
+- Default install alerts for `failed` and `latency`
+- `schema_drift_interval` (default 15m) so drift polls less often than queue metrics
+- Prune old anomalies with `retention_days` (keep open schema-drift rows)
+- GitHub Actions CI (`rake test` on Ruby 3.1–3.3)
+
 ## 0.3.2
 
 - Schema drift alerts are sticky: notify once, stay silent until the drift clears or the item set changes (no 15‑minute re-alerts)

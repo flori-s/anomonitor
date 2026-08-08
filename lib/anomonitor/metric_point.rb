@@ -23,10 +23,20 @@ module Anomonitor
       queue = tags[:queue] || tags["queue"]
       parts = [source, metric, tenant, queue]
       if sticky?
-        items = tags[:items] || tags["items"]
-        parts << Digest::SHA256.hexdigest(items.to_s)[0, 16] if items && !items.to_s.empty?
+        digest = sticky_items_digest
+        parts << digest if digest
       end
       parts.compact.join(":")
+    end
+
+    def sticky_items_digest
+      digest = tags[:items_digest] || tags["items_digest"]
+      return digest.to_s if digest && !digest.to_s.empty?
+
+      items = tags[:items] || tags["items"]
+      return nil if items.nil? || items.to_s.empty?
+
+      Digest::SHA256.hexdigest(items.to_s)[0, 16]
     end
   end
 end

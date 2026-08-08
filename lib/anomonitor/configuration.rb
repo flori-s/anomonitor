@@ -3,9 +3,10 @@
 module Anomonitor
   class Configuration
     attr_accessor :webhook_url, :poll_interval, :cooldown, :retention_days,
-                  :dashboard_path,
+                  :dashboard_path, :dashboard_base_url,
                   :tenants, :exclude_tenants, :tenant_switch,
-                  :schema_drift_exclude
+                  :schema_drift_exclude, :schema_drift_interval,
+                  :authenticate
 
     attr_reader :collectors, :tables, :alerts, :poll_mode, :auto_start
 
@@ -15,6 +16,9 @@ module Anomonitor
       @cooldown = 15 * 60
       @retention_days = 7
       @dashboard_path = "/anomonitor"
+      @dashboard_base_url = nil
+      @schema_drift_interval = 15 * 60
+      @authenticate = nil
       @poll_mode = :thread
       @auto_start = true
       @collectors = CollectorsConfig.new
@@ -34,6 +38,15 @@ module Anomonitor
         ar_internal_metadata
         anomonitor_*
       ]
+    end
+
+    # Absolute URL prefix for webhook dashboard links, e.g. "https://ops.example.com"
+    # Combined with dashboard_path. Falls back to path-only when blank.
+    def anomaly_dashboard_url(anomaly_id)
+      path = "#{dashboard_path.to_s.sub(%r{/+\z}, "")}/anomalies/#{anomaly_id}"
+      path = "/#{path}" unless path.start_with?("/")
+      base = dashboard_base_url.to_s.strip.sub(%r{/+\z}, "")
+      base.empty? ? path : "#{base}#{path}"
     end
 
     # :thread — in-process background poller (default)

@@ -25,6 +25,12 @@
   <dt>Cooldown key</dt>
   <dd><%= @anomaly.cooldown_key %></dd>
 
+  <% tags = @anomaly.tags.is_a?(Hash) ? @anomaly.tags : {} %>
+  <% if tags["items"] || tags[:items] %>
+    <dt>Items</dt>
+    <dd class="am-tags"><%= tags["items"] || tags[:items] %><% if (tags["item_count"] || tags[:item_count]).to_i > 25 %> (showing first 25 of <%= tags["item_count"] || tags[:item_count] %>)<% end %></dd>
+  <% end %>
+
   <dt>Tags</dt>
   <dd class="am-tags"><%= @anomaly.tags.inspect %></dd>
 </dl>

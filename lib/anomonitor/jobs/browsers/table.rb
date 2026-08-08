@@ -59,6 +59,7 @@ module Anomonitor
             elsif cols.include?("locked_at")
               scope = scope.where(locked_at: nil)
             end
+            scope = scope.where("run_at <= ?", Time.current) if cols.include?("run_at")
             scope
           when "failed"
             cols.include?("failed_at") ? scope.where.not(failed_at: nil) : scope.none

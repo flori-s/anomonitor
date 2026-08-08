@@ -59,7 +59,7 @@
     <label>
       <span>Status</span>
       <select name="status">
-        <% %w[all pending failed locked].each do |status| %>
+        <% @status_options.each do |status| %>
           <option value="<%= status %>" <%= "selected" if @filters[:status] == status %>><%= status %></option>
         <% end %>
       </select>

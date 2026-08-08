@@ -63,5 +63,9 @@ module Anomonitor
       else ""
       end
     end
+
+    def anomaly_status_badge_class(anomaly)
+      anomaly.open? ? "warn" : "ok"
+    end
   end
 end

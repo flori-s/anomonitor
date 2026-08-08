@@ -56,4 +56,19 @@ class ConfigurationTest < AnomonitorTestCase
       Anomonitor.configure { |c| c.poll_mode = :sidekiq }
     end
   end
+
+  def test_anomaly_dashboard_url_absolute_and_relative
+    Anomonitor.configure do |c|
+      c.dashboard_path = "/anomonitor"
+      c.dashboard_base_url = nil
+    end
+    assert_equal "/anomonitor/anomalies/9", Anomonitor.config.anomaly_dashboard_url(9)
+
+    Anomonitor.configure { |c| c.dashboard_base_url = "https://ops.example.com/" }
+    assert_equal "https://ops.example.com/anomonitor/anomalies/9", Anomonitor.config.anomaly_dashboard_url(9)
+  end
+
+  def test_schema_drift_interval_default
+    assert_equal 15 * 60, Anomonitor.config.schema_drift_interval
+  end
 end

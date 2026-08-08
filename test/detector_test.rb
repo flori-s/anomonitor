@@ -117,13 +117,13 @@ class DetectorTest < AnomonitorTestCase
       source: "schema_drift",
       metric: "missing_tables",
       value: 1,
-      tags: { tenant: "acme", items: "users", item_count: 1 }
+      tags: { tenant: "acme", items: "users", item_count: 1, items_digest: "digest1" }
     )
     more_items = Anomonitor::MetricPoint.new(
       source: "schema_drift",
       metric: "missing_tables",
       value: 2,
-      tags: { tenant: "acme", items: "users,orders", item_count: 2 }
+      tags: { tenant: "acme", items: "users,orders", item_count: 2, items_digest: "digest2" }
     )
     detector = Anomonitor::Detector.new
 
@@ -135,5 +135,56 @@ class DetectorTest < AnomonitorTestCase
     assert_equal 1, second.size
     refute_nil first.first.resolved_at
     assert_nil second.first.resolved_at
+  end
+
+  def test_schema_drift_fingerprint_uses_items_digest_not_display_truncation
+    same_display = "a," * 24 + "z"
+    a = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 30,
+      tags: { tenant: "acme", items: same_display, items_digest: "aaaa", item_count: 30 }
+    )
+    b = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 31,
+      tags: { tenant: "acme", items: same_display, items_digest: "bbbb", item_count: 31 }
+    )
+    refute_equal a.cooldown_key, b.cooldown_key
+  end
+
+  def test_schema_drift_resolve_notifies_webhook
+    Anomonitor.configure do |c|
+      c.cooldown = 1
+      c.alert :missing_tables, max: 0
+    end
+
+    notifier = Object.new
+    events = []
+    notifier.define_singleton_method(:deliver) do |anomaly, event: "anomaly.detected"|
+      events << event
+      true
+    end
+
+    drifting = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 1,
+      tags: { tenant: "acme", items: "users", items_digest: "x", item_count: 1 }
+    )
+    clear = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 0,
+      tags: { tenant: "acme", items: "", item_count: 0 }
+    )
+
+    detector = Anomonitor::Detector.new(notifier: notifier)
+    detector.evaluate([drifting])
+    detector.evaluate([clear])
+
+    assert_includes events, "anomaly.detected"
+    assert_includes events, "anomaly.resolved"
   end
 end

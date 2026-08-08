@@ -7,14 +7,17 @@ require "uri"
 module Anomonitor
   module Notifiers
     class Webhook
+      DETECTED = "anomaly.detected"
+      RESOLVED = "anomaly.resolved"
+
       def initialize(url: Anomonitor.config.webhook_url)
         @url = url
       end
 
-      def deliver(anomaly)
+      def deliver(anomaly, event: DETECTED)
         return false if @url.nil? || @url.to_s.strip.empty?
 
-        payload = build_payload(anomaly)
+        payload = build_payload(anomaly, event.to_s)
         response = post_json(payload)
         success = response.is_a?(Net::HTTPSuccess)
 
@@ -32,11 +35,11 @@ module Anomonitor
 
       private
 
-      def build_payload(anomaly)
+      def build_payload(anomaly, event)
         if slack_incoming_webhook?
-          { text: slack_text(anomaly) }
+          { text: slack_text(anomaly, event) }
         else
-          machine_payload(anomaly)
+          machine_payload(anomaly, event)
         end
       end
 
@@ -44,14 +47,16 @@ module Anomonitor
         @url.to_s.include?("hooks.slack.com")
       end
 
-      def slack_text(anomaly)
+      def slack_text(anomaly, event)
         threshold = anomaly.threshold.nil? ? "n/a" : anomaly.threshold
-        dashboard = "#{Anomonitor.config.dashboard_path}/anomalies/#{anomaly.id}"
+        dashboard = Anomonitor.config.anomaly_dashboard_url(anomaly.id)
         tags = anomaly.tags.is_a?(Hash) ? anomaly.tags : {}
         tenant = tags["tenant"] || tags[:tenant]
         items = tags["items"] || tags[:items]
+        resolved = event == RESOLVED
 
-        parts = ["*Anomonitor* #{anomaly.severity}"]
+        parts = ["*Anomonitor*"]
+        parts << (resolved ? "resolved" : anomaly.severity.to_s)
         parts << "tenant `#{tenant}`" if tenant && !tenant.to_s.empty?
         parts << "— #{anomaly.rule} on #{anomaly.source}/#{anomaly.metric}:"
         parts << "#{anomaly.value} (threshold #{threshold})"
@@ -60,10 +65,10 @@ module Anomonitor
         parts.join(" ")
       end
 
-      def machine_payload(anomaly)
+      def machine_payload(anomaly, event)
         {
           gem: "anomonitor",
-          event: "anomaly.detected",
+          event: event,
           severity: anomaly.severity,
           rule: anomaly.rule,
           source: anomaly.source,
@@ -71,7 +76,8 @@ module Anomonitor
           value: anomaly.value,
           threshold: anomaly.threshold,
           sampled_at: anomaly.sampled_at&.iso8601,
-          dashboard_url: "#{Anomonitor.config.dashboard_path}/anomalies/#{anomaly.id}",
+          resolved_at: anomaly.resolved_at&.iso8601,
+          dashboard_url: Anomonitor.config.anomaly_dashboard_url(anomaly.id),
           tags: anomaly.tags
         }
       end

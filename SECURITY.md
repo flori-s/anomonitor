@@ -4,8 +4,13 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-| < 0.1   | :x:                |
+| 0.4.x   | :white_check_mark: |
+| 0.3.x   | :white_check_mark: |
+| < 0.3   | :x:                |
+
+## Dashboard access
+
+The Anomonitor engine is **not authenticated by default**. If you mount it on a publicly reachable host, set `c.authenticate` in the initializer (HTTP basic or your app’s admin check). See the README.
 
 ## Reporting a Vulnerability
 

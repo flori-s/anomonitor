@@ -61,7 +61,11 @@ module Anomonitor
         def apply_status(scope, status)
           case status
           when "pending"
-            scope.where(failed_at: nil).where(locked_at: nil)
+            scope = scope.where(failed_at: nil).where(locked_at: nil)
+            if scope.klass.column_names.include?("run_at")
+              scope = scope.where("run_at <= ?", Time.current)
+            end
+            scope
           when "failed"
             scope.where.not(failed_at: nil)
           when "locked"

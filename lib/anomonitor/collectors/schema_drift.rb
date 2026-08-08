@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "set"
+require "digest"
 
 module Anomonitor
   module Collectors
@@ -8,6 +9,7 @@ module Anomonitor
     # missing/extra tables and missing/extra columns vs the majority baseline.
     #
     # Requires Anomonitor.config.tenants to be set.
+    # PostgreSQL (information_schema.table_schema as tenant) is supported.
     class SchemaDrift < Base
       def collect
         tenants = Tenancy.tenant_names
@@ -113,7 +115,15 @@ module Anomonitor
       end
 
       # Always emit (including zeros) so the detector can resolve sticky alerts when drift clears.
+      # Display truncates items; items_digest fingerprints the full sorted set.
       def drift_points(tenant, metric, items)
+        digest =
+          if items.empty?
+            nil
+          else
+            Digest::SHA256.hexdigest(items.join("\0"))[0, 16]
+          end
+
         [
           point(
             source: "schema_drift",
@@ -122,8 +132,9 @@ module Anomonitor
             tags: {
               tenant: tenant,
               items: items.first(25).join(","),
-              item_count: items.size
-            }
+              item_count: items.size,
+              items_digest: digest
+            }.compact
           )
         ]
       end

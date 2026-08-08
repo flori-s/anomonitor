@@ -11,6 +11,8 @@ module Anomonitor
         queue: params[:queue].presence
       }
       @sources = Jobs::Browser.enabled_sources
+      @status_options = Jobs::Browser.status_options(@filters[:source])
+      @filters[:status] = "all" unless @status_options.include?(@filters[:status])
       @health = build_health
       @jobs = Jobs::Browser.fetch(@filters)
     end

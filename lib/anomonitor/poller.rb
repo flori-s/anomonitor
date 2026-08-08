@@ -15,6 +15,7 @@ module Anomonitor
       @last_run_at = nil
       @last_error = nil
       @collector_status = {}
+      @last_schema_drift_at = nil
     end
 
     def start
@@ -40,7 +41,7 @@ module Anomonitor
       points = collect_all
       persist(points)
       Detector.new.evaluate(points)
-      prune_old_samples
+      prune_old_records
       @last_run_at = Time.current
       @last_error = nil
       points
@@ -57,7 +58,8 @@ module Anomonitor
         last_run_at: effective_last_run_at,
         last_error: @last_error,
         collectors: @collector_status,
-        poll_interval: Anomonitor.config.poll_interval
+        poll_interval: Anomonitor.config.poll_interval,
+        schema_drift_interval: Anomonitor.config.schema_drift_interval
       }
     end
 
@@ -84,6 +86,7 @@ module Anomonitor
       collectors.each do |name, collector|
         result = Array(collector.collect)
         @collector_status[name] = { ok: true, count: result.size, at: Time.current }
+        @last_schema_drift_at = Time.current if name == :schema_drift
         points.concat(result)
       rescue StandardError => e
         @collector_status[name] = { ok: false, error: e.message, at: Time.current }
@@ -98,11 +101,19 @@ module Anomonitor
       list[:sidekiq] = Collectors::Sidekiq.new if cfg.sidekiq
       list[:delayed_job] = Collectors::DelayedJob.new if cfg.delayed_job
       list[:solid_queue] = Collectors::SolidQueue.new if cfg.solid_queue
-      list[:schema_drift] = Collectors::SchemaDrift.new if cfg.schema_drift
+      list[:schema_drift] = Collectors::SchemaDrift.new if cfg.schema_drift && schema_drift_due?
       Anomonitor.config.tables.each do |table|
         list[:"table_#{table.name}"] = Collectors::Table.new(table)
       end
       list
+    end
+
+    def schema_drift_due?
+      interval = Anomonitor.config.schema_drift_interval.to_i
+      interval = Anomonitor.config.poll_interval.to_i if interval <= 0
+      return true if @last_schema_drift_at.nil?
+
+      Time.current - @last_schema_drift_at >= interval
     end
 
     def persist(points)
@@ -125,11 +136,17 @@ module Anomonitor
       Anomonitor.logger.warn("[Anomonitor] Failed to persist metrics: #{e.message}")
     end
 
-    def prune_old_samples
+    def prune_old_records
       days = Anomonitor.config.retention_days.to_i
       return if days <= 0
 
-      Anomonitor::MetricSample.where("sampled_at < ?", days.days.ago).delete_all
+      cutoff = days.days.ago
+      Anomonitor::MetricSample.where("sampled_at < ?", cutoff).delete_all
+      # Keep open schema-drift anomalies until resolved; prune everything else by age
+      Anomonitor::Anomaly
+        .where("created_at < ?", cutoff)
+        .where("NOT (source = ? AND resolved_at IS NULL)", "schema_drift")
+        .delete_all
     rescue StandardError
       nil
     end

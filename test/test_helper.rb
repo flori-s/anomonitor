@@ -119,6 +119,18 @@ module Anomonitor
   class Anomaly < ApplicationRecord
     self.table_name = "anomonitor_anomalies"
 
+    scope :recent, -> { order(created_at: :desc) }
+    scope :open, -> { where(resolved_at: nil) }
+    scope :resolved, -> { where.not(resolved_at: nil) }
+
+    def open?
+      resolved_at.nil?
+    end
+
+    def resolved?
+      !open?
+    end
+
     def tags
       raw = read_attribute(:tags)
       return {} if raw.nil? || raw == ""

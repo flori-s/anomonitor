@@ -16,7 +16,7 @@ Requires **Ruby >= 3.0** and **Rails >= 6.1**.
 ```bash
 bundle install
 rails generate anomonitor:install
-rails railties:install:migrations FROM=anomonitor
+rails anomonitor:install:migrations
 rails db:migrate
 ```
 
@@ -34,21 +34,49 @@ mount Anomonitor::Engine => "/anomonitor"
 ```ruby
 Anomonitor.configure do |c|
   c.webhook_url = ENV.fetch("ANOMONITOR_WEBHOOK_URL")
+  c.dashboard_base_url = ENV["ANOMONITOR_DASHBOARD_BASE_URL"] # e.g. "https://ops.example.com"
   c.poll_interval = 60
   c.cooldown = 15 * 60
+  c.retention_days = 7
+  c.schema_drift_interval = 15 * 60
 
   c.collectors.sidekiq = true
   c.collectors.delayed_job = true
   c.collectors.solid_queue = true
 
   c.alert :queue_depth, max: 1_000
+  c.alert :failed, max: 50
+  c.alert :latency, max: 120
   c.alert :growth_spike, window: 5 * 60, multiplier: 3.0
 end
 ```
 
+### Dashboard auth
+
+The engine is **open by default**. Protect it:
+
+```ruby
+Anomonitor.configure do |c|
+  c.authenticate = -> {
+    authenticate_or_request_with_http_basic("Anomonitor") do |user, pass|
+      ActiveSupport::SecurityUtils.secure_compare(user, ENV.fetch("ANOMONITOR_USER")) &&
+        ActiveSupport::SecurityUtils.secure_compare(pass, ENV.fetch("ANOMONITOR_PASSWORD"))
+    end
+  }
+end
+```
+
+Or reuse host auth:
+
+```ruby
+c.authenticate = -> { redirect_to main_app.root_path unless current_user&.admin? }
+```
+
+You can also constrain the mount in routes (`authenticate :user, ->(u) { u.admin? } do ... end`).
+
 ### Multi-tenancy + schema drift
 
-For Apartment / schema-per-tenant apps, set `tenants` so Delayed Job is collected **per tenant** and enable schema drift:
+For Apartment / schema-per-tenant apps, set `tenants` so Delayed Job is collected **per tenant** and enable schema drift (**PostgreSQL** / `information_schema`):
 
 ```ruby
 Anomonitor.configure do |c|
@@ -59,6 +87,7 @@ Anomonitor.configure do |c|
 
   c.collectors.delayed_job = true
   c.collectors.schema_drift = true
+  c.schema_drift_interval = 15 * 60 # heavier than queue polls; default 15m
   c.schema_drift_exclude = %w[
     schema_migrations
     ar_internal_metadata
@@ -77,7 +106,7 @@ end
 
 `schema_drift_exclude` accepts exact names or `File.fnmatch` globs (`a*` matches all a-prefixed tables; `a_*` only matches `a_…`).
 
-Schema drift webhooks are **sticky**: one notify per tenant/metric/item-set, then silence until the drift clears or the missing/extra set changes. Queue threshold and growth alerts still use `c.cooldown` (default 15 minutes).
+Schema drift webhooks are **sticky**: one `anomaly.detected` per tenant/metric/item-set, silence until clear or the set changes, then `anomaly.resolved` when it clears. Queue threshold and growth alerts still use `c.cooldown` (default 15 minutes).
 
 ### Custom tables
 
@@ -104,7 +133,9 @@ end
 
 ### Webhooks
 
-Set `ANOMONITOR_WEBHOOK_URL`. Slack Incoming Webhooks (`hooks.slack.com`) get a formatted `text` payload (includes tenant when present). Other URLs receive JSON:
+Set `ANOMONITOR_WEBHOOK_URL`. Set `ANOMONITOR_DASHBOARD_BASE_URL` (or `c.dashboard_base_url`) so Slack/JSON links are absolute.
+
+Slack Incoming Webhooks (`hooks.slack.com`) get a formatted `text` payload. Other URLs receive JSON:
 
 ```json
 {
@@ -117,10 +148,13 @@ Set `ANOMONITOR_WEBHOOK_URL`. Slack Incoming Webhooks (`hooks.slack.com`) get a 
   "value": 4200,
   "threshold": 1000,
   "sampled_at": "2026-08-07T09:00:00Z",
-  "dashboard_url": "/anomonitor/anomalies/123",
+  "resolved_at": null,
+  "dashboard_url": "https://ops.example.com/anomonitor/anomalies/123",
   "tags": { "tenant": "acme" }
 }
 ```
+
+Events: `anomaly.detected` and `anomaly.resolved` (sticky schema drift clear).
 
 ## Polling: thread vs cron
 
@@ -128,7 +162,7 @@ Anomonitor can collect on a background thread **or** via an external scheduler.
 
 | `poll_mode` | Behavior |
 |---|---|
-| `:thread` (default) | Starts an in-process poller after boot (`poll_interval` seconds). Avoid with multi-worker Puma/Unicorn unless only one worker should run it. |
+| `:thread` (default) | Starts an in-process poller after boot (`poll_interval` seconds). Avoid with multi-worker Puma/Unicorn unless only one worker should run it. Prefer `:cron` in multi-worker setups. |
 | `:cron` | No background thread. Schedule `rails anomonitor:poll` yourself. |
 
 ```ruby
@@ -154,13 +188,15 @@ end
 
 `c.auto_start = false` is still supported and is equivalent to `poll_mode = :cron`.
 
+Samples and resolved anomalies older than `retention_days` are pruned (open schema-drift rows are kept until resolved).
+
 ## Dashboard
 
 Open `/anomonitor` for:
 
 - Current metric cards and mini history bars
 - **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue)
-- Recent anomalies + delivery status
+- Open anomalies (filter open / resolved / all) + delivery status
 - Poller health (last run, collector status)
 
 ## Manual poll

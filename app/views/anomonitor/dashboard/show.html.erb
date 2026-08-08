@@ -54,7 +54,7 @@
 </section>
 
 <section class="am-section">
-  <h2>Recent anomalies</h2>
+  <h2>Open anomalies</h2>
   <% if @recent_anomalies.any? %>
     <table class="am-table">
       <thead>
@@ -81,6 +81,6 @@
       </tbody>
     </table>
   <% else %>
-    <p class="am-empty">No anomalies detected.</p>
+    <p class="am-empty">No open anomalies. <%= link_to "View all", anomalies_path(status: "all") %>.</p>
   <% end %>
 </section>

@@ -15,6 +15,16 @@ module Anomonitor
         new.enabled_sources
       end
 
+      def self.status_options(source = nil)
+        if source.to_s.start_with?("table:")
+          name = source.to_s.delete_prefix("table:")
+          table = Anomonitor.config.tables.find { |t| t.name.to_s == name }
+          return %w[all pending failed] if table && !table.delayed_job_style?
+        end
+
+        STATUSES
+      end
+
       def initialize(filters = {})
         @filters = normalize(filters)
       end
