@@ -37,7 +37,8 @@ module Anomonitor
       merge_tags!("resolved_by" => by.to_s)
       update!(resolved_at: Time.current)
       if notify
-        Anomonitor.config.build_notifier.deliver(self, event: Notifiers::RESOLVED)
+        event = by.to_s == "manual" ? Notifiers::ACKED : Notifiers::RESOLVED
+        Anomonitor.config.build_notifier.deliver(self, event: event)
       end
       self
     end

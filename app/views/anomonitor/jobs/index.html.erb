@@ -98,7 +98,15 @@
             <tr>
               <td><%= job.source %></td>
               <td><code><%= job.id %></code></td>
-              <td><code><%= job.name %></code></td>
+              <td>
+                <code><%= job.name %></code>
+                <% if job.detail.present? %>
+                  <details class="am-job-detail">
+                    <summary>detail</summary>
+                    <pre class="am-tags"><%= job.detail_text %></pre>
+                  </details>
+                <% end %>
+              </td>
               <td>
                 <span class="am-badge <%= job_status_badge_class(job.status) %>"><%= job.status %></span>
               </td>

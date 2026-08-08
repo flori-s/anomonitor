@@ -30,6 +30,23 @@ module Anomonitor
         false
       end
 
+      def deliver_digest(payload)
+        return false if @url.nil? || @url.to_s.strip.empty?
+
+        body =
+          if slack_incoming_webhook?
+            count = payload[:count] || payload["count"] || 0
+            { text: "*Anomonitor* digest — #{count} anomalies <#{Anomonitor.config.dashboard_path}/anomalies>" }
+          else
+            payload
+          end
+        response = post_json(body)
+        response.is_a?(Net::HTTPSuccess)
+      rescue StandardError => e
+        Anomonitor.logger.warn("[Anomonitor] Digest webhook error: #{e.message}")
+        false
+      end
+
       private
 
       def build_payload(anomaly, event)
@@ -50,10 +67,15 @@ module Anomonitor
         tags = anomaly.tags.is_a?(Hash) ? anomaly.tags : {}
         tenant = tags["tenant"] || tags[:tenant]
         items = tags["items"] || tags[:items]
-        resolved = event == RESOLVED
 
         parts = ["*Anomonitor*"]
-        parts << (resolved ? "resolved" : anomaly.severity.to_s)
+        parts << if event == RESOLVED
+                   "resolved"
+                 elsif event == ACKED
+                   "acked"
+                 else
+                   anomaly.severity.to_s
+                 end
         parts << "tenant `#{tenant}`" if tenant && !tenant.to_s.empty?
         parts << "— #{anomaly.rule} on #{anomaly.source}/#{anomaly.metric}:"
         parts << "#{anomaly.value} (threshold #{threshold})"

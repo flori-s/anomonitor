@@ -7,6 +7,7 @@ Anomonitor::Engine.routes.draw do
       post :retry_webhook
     end
   end
+  resources :mutes, only: %i[index create destroy]
   get "metrics", to: "metrics#index", as: :metrics
   get "metrics.json", to: "metrics#export_json", as: :metrics_json
   get "metrics.prom", to: "metrics#export_prometheus", as: :metrics_prom

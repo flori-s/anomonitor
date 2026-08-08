@@ -89,7 +89,12 @@ module Anomonitor
             run_at: cols.include?("run_at") ? record.run_at : nil,
             failed_at: cols.include?("failed_at") ? record.failed_at : nil,
             error: truncate(error),
-            tags: { table: @source.name.to_s }.tap { |t| t[:tenant] = tenant if tenant }
+            tags: { table: @source.name.to_s }.tap { |t| t[:tenant] = tenant if tenant },
+            detail: {
+              "table" => @source.name.to_s,
+              "handler" => truncate(cols.include?("handler") ? record.handler.to_s : nil, 800),
+              "error" => truncate(cols.include?("last_error") ? record.last_error.to_s : nil, 1000)
+            }.compact
           )
         end
 
@@ -172,7 +177,8 @@ module Anomonitor
             run_at: run_at,
             failed_at: mapped == "failed" ? run_at : nil,
             error: nil,
-            tags: { table: @source.name.to_s, status: raw_status }.tap { |t| t[:tenant] = tenant if tenant }
+            tags: { table: @source.name.to_s, status: raw_status }.tap { |t| t[:tenant] = tenant if tenant },
+            detail: { "table" => @source.name.to_s, "status" => raw_status }
           )
         end
 

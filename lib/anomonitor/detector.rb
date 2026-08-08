@@ -15,6 +15,7 @@ module Anomonitor
         Anomonitor.config.alerts.each do |rule|
           points.each do |point|
             next unless metric_matches?(rule, point)
+            next unless rule.matches_point?(point)
 
             anomaly = detect(rule, point)
             anomalies << anomaly if anomaly
@@ -23,6 +24,7 @@ module Anomonitor
       end
 
       resolve_sticky_anomalies(@active_sticky_keys, @observed_sticky_bases)
+      Digester.flush_if_due!(notifier: @notifier) if Anomonitor.config.digest_enabled?
       anomalies
     end
 
@@ -102,6 +104,12 @@ module Anomonitor
 
       return nil if cooling_down?(key, point)
 
+      tenant = point.tags[:tenant] || point.tags["tenant"]
+      if Mute.muted?(metric: point.metric, rule: reason, source: point.source, tenant: tenant)
+        Anomonitor.logger.info("[Anomonitor] Muted anomaly #{reason}:#{point.source}/#{point.metric}")
+        return nil
+      end
+
       anomaly = Anomonitor::Anomaly.create!(
         rule: reason,
         source: point.source,
@@ -116,11 +124,15 @@ module Anomonitor
         resolved_at: nil
       )
 
-      delivered = @notifier.deliver(anomaly)
-      anomaly.update!(
-        webhook_status: delivered ? "delivered" : "failed",
-        webhook_delivered_at: delivered ? Time.current : nil
-      )
+      if Anomonitor.config.digest_enabled?
+        Digester.record(anomaly)
+      else
+        delivered = @notifier.deliver(anomaly)
+        anomaly.update!(
+          webhook_status: delivered ? "delivered" : "failed",
+          webhook_delivered_at: delivered ? Time.current : nil
+        )
+      end
       anomaly
     rescue StandardError => e
       Anomonitor.logger.warn("[Anomonitor] Failed to record anomaly: #{e.message}")

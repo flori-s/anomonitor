@@ -86,7 +86,12 @@ module Anomonitor
             end
 
           error = nil
-          error = job.last_error.to_s.lines.first&.strip if job.respond_to?(:last_error) && job.last_error
+          full_error = nil
+          if job.respond_to?(:last_error) && job.last_error
+            full_error = job.last_error.to_s
+            error = full_error.lines.first&.strip
+          end
+          handler = job.respond_to?(:handler) ? job.handler.to_s : nil
 
           Row.new(
             source: source_key,
@@ -98,7 +103,12 @@ module Anomonitor
             run_at: job.respond_to?(:run_at) ? job.run_at : nil,
             failed_at: job.respond_to?(:failed_at) ? job.failed_at : nil,
             error: truncate(error),
-            tags: tenant ? { tenant: tenant } : {}
+            tags: tenant ? { tenant: tenant } : {},
+            detail: {
+              "handler" => truncate(handler, 800),
+              "error" => truncate(full_error, 1000),
+              "attempts" => (job.respond_to?(:attempts) ? job.attempts : nil)
+            }.compact
           )
         end
 

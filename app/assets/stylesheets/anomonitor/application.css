@@ -324,6 +324,23 @@
   margin-top: 0.15rem;
 }
 
+.am-job-detail {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+}
+
+.am-job-detail summary {
+  cursor: pointer;
+  color: var(--am-accent);
+  font-family: var(--am-mono);
+}
+
+.am-job-detail pre {
+  margin: 0.35rem 0 0;
+  max-height: 12rem;
+  overflow: auto;
+}
+
 .am-detail {
   background: var(--am-surface);
   border: 1px solid var(--am-border);

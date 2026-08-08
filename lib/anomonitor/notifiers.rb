@@ -4,17 +4,23 @@ module Anomonitor
   module Notifiers
     DETECTED = "anomaly.detected"
     RESOLVED = "anomaly.resolved"
+    ACKED = "anomaly.acked"
+    DIGEST = "anomaly.digest"
 
     module_function
 
-    # Build the configured notifier (default: built-in Webhook).
-    # Accepts a deliver-capable object, a Class, a callable, or an Array of those.
     def build(config = Anomonitor.config)
       raw = config.notifier
-      return Webhook.new if raw.nil?
+      notifier =
+        if raw.nil?
+          Webhook.new
+        else
+          list = Array(raw).map { |entry| wrap(entry) }
+          list.size == 1 ? list.first : Composite.new(list)
+        end
 
-      list = Array(raw).map { |entry| wrap(entry) }
-      list.size == 1 ? list.first : Composite.new(list)
+      limit = config.notifier_rate_limit.to_i
+      limit.positive? ? RateLimited.new(notifier, limit_per_minute: limit) : notifier
     end
 
     def wrap(entry)
@@ -33,7 +39,6 @@ module Anomonitor
       end
     end
 
-    # Shared JSON payload for custom transports (e.g. host Webhook::Broadcast).
     def payload(anomaly, event: DETECTED)
       {
         gem: "anomonitor",

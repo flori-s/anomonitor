@@ -13,15 +13,38 @@
   <% end %>
 </div>
 
+<%= form_with url: root_path, method: :get, local: true, class: "am-filters" do %>
+  <label>
+    <span>Tenant</span>
+    <select name="tenant">
+      <option value="">All tenants</option>
+      <% @tenants.each do |tenant| %>
+        <option value="<%= tenant %>" <%= "selected" if @tenant == tenant %>><%= tenant %></option>
+      <% end %>
+    </select>
+  </label>
+  <button type="submit" class="am-btn">Filter</button>
+<% end %>
+
+<% if @tenant %>
+  <p class="am-lead">Showing tenant <code><%= @tenant %></code> — <%= link_to "clear", root_path %>.</p>
+<% end %>
+
 <section class="am-section">
-  <h2>Current metrics</h2>
+  <h2>Current metrics<% if @tenant %> · <%= @tenant %><% end %></h2>
   <% if @latest_metrics.any? %>
     <div class="am-grid">
       <% @latest_metrics.first(12).each do |sample| %>
         <div class="am-stat">
           <div class="label"><%= sample.source %> · <%= sample.metric %></div>
           <div class="value"><%= number_with_precision(sample.value, precision: 0, delimiter: ",") %></div>
-          <div class="meta"><%= time_ago_in_words(sample.sampled_at) %> ago</div>
+          <div class="meta">
+            <%= time_ago_in_words(sample.sampled_at) %> ago
+            <% tags = sample.tags.is_a?(Hash) ? sample.tags : {} %>
+            <% if tags["tenant"] || tags[:tenant] || tags["queue"] || tags[:queue] %>
+              · <%= [tags["tenant"] || tags[:tenant], tags["queue"] || tags[:queue]].compact.join(" / ") %>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
@@ -29,6 +52,21 @@
     <p class="am-empty">No samples yet. <% if poller_cron?(@status) %>Run <code>rails anomonitor:poll</code> (or wait for cron).<% else %>The poller will populate metrics after the first tick.<% end %></p>
   <% end %>
 </section>
+
+<% if @by_tenant && @by_tenant.size > 1 && @tenant.nil? %>
+  <section class="am-section">
+    <h2>By tenant</h2>
+    <div class="am-grid">
+      <% @by_tenant.first(8).each do |tenant, samples| %>
+        <div class="am-stat">
+          <div class="label"><%= link_to tenant, root_path(tenant: tenant == "(untagged)" ? nil : tenant) %></div>
+          <div class="value"><%= samples.size %></div>
+          <div class="meta">metric series</div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>
 
 <section class="am-section">
   <h2>Recent history</h2>

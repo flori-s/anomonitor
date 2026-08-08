@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.0
+
+- Mutes / snoozes (`anomonitor_mutes` + `/mutes` UI + `c.mute(...)`)
+- Anomaly digest mode (`c.digest_interval`) → `anomaly.digest` webhook batch
+- Alert `match:` filters (e.g. per-queue Sidekiq: `match: { queue: true }`)
+- Manual resolve emits `anomaly.acked` (auto-clear still `anomaly.resolved`)
+- Notifier rate limit (`c.notifier_rate_limit`)
+- Jobs browser expandable detail (args / handler / error)
+- Overview tenant filter + by-tenant summary
+- SchemaDrift collector tests + engine route surface tests
+- RubyGems release notes (`RELEASE.md`) + gemspec MFA metadata
+
 ## 0.5.0
 
 - Manual resolve/ack and reopen on anomaly detail (sticky silence until clear)

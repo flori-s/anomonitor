@@ -6,7 +6,8 @@ module Anomonitor
                   :dashboard_path, :dashboard_base_url,
                   :tenants, :exclude_tenants, :tenant_switch,
                   :schema_drift_exclude, :schema_drift_interval,
-                  :authenticate, :notifier, :poll_lock
+                  :authenticate, :notifier, :poll_lock,
+                  :digest_interval, :digest_last_flushed_at, :notifier_rate_limit
 
     attr_reader :collectors, :tables, :alerts, :poll_mode, :auto_start
 
@@ -21,20 +22,19 @@ module Anomonitor
       @schema_drift_interval = 15 * 60
       @authenticate = nil
       @poll_lock = true
+      @digest_interval = nil
+      @digest_last_flushed_at = nil
+      @notifier_rate_limit = 0
       @poll_mode = :thread
       @auto_start = true
       @collectors = CollectorsConfig.new
       @tables = []
       @alerts = []
 
-      # Multi-tenancy: array or callable returning schema/tenant names
       @tenants = nil
       @exclude_tenants = %w[public]
-      # Optional: ->(name, &block) { Apartment::Tenant.switch(name, &block) }
-      # Default uses Apartment::Tenant.switch when available
       @tenant_switch = nil
 
-      # Exact names or File.fnmatch globs skipped by schema drift
       @schema_drift_exclude = %w[
         schema_migrations
         ar_internal_metadata
@@ -42,8 +42,6 @@ module Anomonitor
       ]
     end
 
-    # Absolute URL prefix for webhook dashboard links, e.g. "https://ops.example.com"
-    # Combined with dashboard_path. Falls back to path-only when blank.
     def anomaly_dashboard_url(anomaly_id)
       path = "#{dashboard_path.to_s.sub(%r{/+\z}, "")}/anomalies/#{anomaly_id}"
       path = "/#{path}" unless path.start_with?("/")
@@ -55,8 +53,24 @@ module Anomonitor
       Notifiers.build(self)
     end
 
-    # :thread — in-process background poller (default)
-    # :cron   — no background thread; schedule `rails anomonitor:poll`
+    def digest_enabled?
+      digest_interval.to_i.positive?
+    end
+
+    # Persist a mute (DB) — metric/rule/source/tenant are optional matchers.
+    # duration: seconds or ActiveSupport duration (e.g. 24.hours)
+    def mute(duration:, metric: nil, rule: nil, source: nil, tenant: nil, reason: nil)
+      seconds = duration.respond_to?(:to_i) ? duration.to_i : duration
+      Mute.create!(
+        metric: metric&.to_s,
+        rule: rule&.to_s,
+        source: source&.to_s,
+        tenant: tenant&.to_s,
+        muted_until: Time.current + seconds,
+        reason: reason
+      )
+    end
+
     def poll_mode=(mode)
       mode = mode.to_sym
       unless %i[thread cron].include?(mode)
@@ -67,7 +81,6 @@ module Anomonitor
       @auto_start = (mode == :thread)
     end
 
-    # Legacy alias: auto_start=false is the same as poll_mode=:cron
     def auto_start=(value)
       @auto_start = !!value
       @poll_mode = @auto_start ? :thread : :cron
@@ -98,9 +111,6 @@ module Anomonitor
     end
 
     class TableSource
-      # style: :status (default) uses status/active columns
-      # style: :delayed_job uses failed_at / locked_at / run_at like Delayed::Job
-      # tenant: optional column name to emit per-tenant metrics (e.g. :tenant)
       attr_accessor :name, :model, :timestamp, :status, :active, :tenant, :style
 
       def initialize(name)
@@ -122,14 +132,15 @@ module Anomonitor
     end
 
     class AlertRule
-      attr_reader :metric, :max, :window, :multiplier, :severity
+      attr_reader :metric, :max, :window, :multiplier, :severity, :match
 
-      def initialize(metric, max: nil, window: nil, multiplier: nil, severity: "high")
+      def initialize(metric, max: nil, window: nil, multiplier: nil, severity: "high", match: {})
         @metric = metric.to_sym
         @max = max
         @window = normalize_duration(window)
         @multiplier = multiplier
         @severity = severity
+        @match = (match || {}).transform_keys(&:to_sym)
       end
 
       def threshold?
@@ -142,6 +153,21 @@ module Anomonitor
 
       def window_seconds
         @window || (5 * 60)
+      end
+
+      # match: { queue: true } => tag present; { queue: nil } => tag absent; { queue: "x" } => exact
+      def matches_point?(point)
+        return true if match.nil? || match.empty?
+
+        match.all? do |key, expected|
+          tag = point.tags[key] || point.tags[key.to_s]
+          case expected
+          when true then !tag.nil? && tag.to_s != ""
+          when false, nil then tag.nil? || tag.to_s == ""
+          else
+            tag.to_s == expected.to_s
+          end
+        end
       end
 
       private

@@ -51,6 +51,30 @@ Anomonitor.configure do |c|
 end
 ```
 
+Per-queue Sidekiq (tagged `queue_depth` / `latency` points):
+
+```ruby
+c.alert :queue_depth, max: 250, match: { queue: true }
+c.alert :latency, max: 60, match: { queue: "mailers" }
+```
+
+`match` values: `true` = tag present, `nil`/`false` = tag absent, string = exact.
+
+### Mutes
+
+```ruby
+Anomonitor.config.mute(metric: "extra_tables", tenant: "acme", duration: 24.hours, reason: "migration")
+```
+
+Or use `/anomonitor/mutes` in the dashboard.
+
+### Digests
+
+```ruby
+c.digest_interval = 3600       # batch detections into anomaly.digest
+c.notifier_rate_limit = 30     # max delivers per minute
+```
+
 ### Dashboard auth
 
 The engine is **open by default**. Protect it:
@@ -212,8 +236,10 @@ Samples and resolved anomalies older than `retention_days` are pruned (open sche
 Open `/anomonitor` for:
 
 - Current metric cards and mini history bars
-- **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue, search)
+- **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue, search; expandable detail)
 - Open anomalies (filter open / resolved / all) + resolve/ack, reopen, retry webhook
+- **Mutes** — snooze by metric/rule/source/tenant
+- Overview tenant filter
 - Poller health (last run, collector status)
 
 ### Metrics export

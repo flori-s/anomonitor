@@ -115,6 +115,13 @@ module Anomonitor
           err = error
           err ||= job["error_message"] if job.respond_to?(:[])
 
+          args =
+            if job.respond_to?(:args)
+              job.args
+            elsif job.respond_to?(:[]) && job["args"]
+              job["args"]
+            end
+
           Row.new(
             source: source_key,
             id: jid,
@@ -125,7 +132,13 @@ module Anomonitor
             run_at: at,
             failed_at: status == "failed" ? at : nil,
             error: truncate(err),
-            tags: {}
+            tags: {},
+            detail: {
+              "class" => klass.to_s,
+              "jid" => jid,
+              "args" => truncate(args.inspect, 500),
+              "error" => truncate(err, 1000)
+            }.compact
           )
         end
 

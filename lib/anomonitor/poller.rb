@@ -49,6 +49,7 @@ module Anomonitor
         points = collect_all
         persist(points)
         Detector.new.evaluate(points)
+        Mute.prune_expired! if defined?(Anomonitor::Mute)
         prune_old_records
         @last_run_at = Time.current
         @last_error = nil

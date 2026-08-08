@@ -74,8 +74,14 @@ Anomonitor.configure do |c|
   #   t.tenant = :tenant
   # end
 
-  c.alert :queue_depth, max: 1_000
+  c.alert :queue_depth, max: 1_000 # aggregate (untagged) + any matching points
+  # Stricter per-queue Sidekiq depths (only points tagged with a queue name):
+  c.alert :queue_depth, max: 250, match: { queue: true }
   c.alert :failed, max: 50
-  c.alert :latency, max: 120
+  c.alert :latency, max: 120, match: { queue: true }
   c.alert :growth_spike, window: 5 * 60, multiplier: 3.0
+
+  # Optional: batch webhook noise into a digest every N seconds
+  # c.digest_interval = 3600
+  # c.notifier_rate_limit = 30
 end
