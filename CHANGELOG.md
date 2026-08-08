@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- Jobs dashboard: collector health cards + read-only live job browser for Sidekiq, Delayed Job, Solid Queue, and custom tables
+
 ## 0.2.3
 
 - Wrap long metric/anomaly tag lines so tables stay within the viewport

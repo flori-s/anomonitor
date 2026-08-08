@@ -157,6 +157,7 @@ end
 Open `/anomonitor` for:
 
 - Current metric cards and mini history bars
+- **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue)
 - Recent anomalies + delivery status
 - Poller health (last run, collector status)
 

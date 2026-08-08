@@ -1,0 +1,123 @@
+<% content_for :title, "Jobs" %>
+
+<h1>Jobs</h1>
+<p class="am-lead">Queue health and live jobs across configured collectors. Read-only — use your host job UI to retry or delete.</p>
+
+<section class="am-section">
+  <h2>Collector health</h2>
+  <% if @health.any? %>
+    <div class="am-grid">
+      <% @health.each do |card| %>
+        <% collector = card[:collector] || {} %>
+        <% ok = collector[:ok].nil? ? collector["ok"] : collector[:ok] %>
+        <div class="am-stat">
+          <div class="label"><%= card[:source] %></div>
+          <div class="am-health-metrics">
+            <span>depth <strong><%= format_metric(card[:queue_depth]) %></strong></span>
+            <span>failed <strong><%= format_metric(card[:failed]) %></strong></span>
+            <span>locked <strong><%= format_metric(card[:locked]) %></strong></span>
+          </div>
+          <div class="meta">
+            <% if ok == true %>
+              <span class="am-badge ok">collector ok</span>
+            <% elsif ok == false %>
+              <span class="am-badge danger">collector error</span>
+            <% else %>
+              <span class="am-badge warn">no poll yet</span>
+            <% end %>
+          </div>
+          <% if card[:series].any? %>
+            <% max = card[:series].map(&:value).max.to_f %>
+            <div class="am-bars">
+              <% card[:series].each do |row| %>
+                <% height = max.positive? ? [(row.value / max * 100).round, 4].max : 4 %>
+                <div class="am-bar" style="height: <%= height %>%" title="<%= row.value %> @ <%= row.sampled_at %>"></div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="am-empty">No job collectors enabled.</p>
+  <% end %>
+</section>
+
+<section class="am-section">
+  <h2>Live jobs</h2>
+
+  <%= form_with url: jobs_path, method: :get, local: true, class: "am-filters" do %>
+    <label>
+      <span>Source</span>
+      <select name="source">
+        <option value="">All</option>
+        <% @sources.each do |source| %>
+          <option value="<%= source %>" <%= "selected" if @filters[:source] == source %>><%= source %></option>
+        <% end %>
+      </select>
+    </label>
+    <label>
+      <span>Status</span>
+      <select name="status">
+        <% %w[all pending failed locked].each do |status| %>
+          <option value="<%= status %>" <%= "selected" if @filters[:status] == status %>><%= status %></option>
+        <% end %>
+      </select>
+    </label>
+    <label>
+      <span>Tenant</span>
+      <input type="text" name="tenant" value="<%= @filters[:tenant] %>" placeholder="optional">
+    </label>
+    <label>
+      <span>Queue</span>
+      <input type="text" name="queue" value="<%= @filters[:queue] %>" placeholder="Sidekiq / Solid Queue">
+    </label>
+    <button type="submit" class="am-btn">Filter</button>
+  <% end %>
+
+  <% if @jobs.any? %>
+    <div class="am-table-wrap">
+      <table class="am-table am-jobs-table">
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>Queue / Tenant</th>
+            <th>When</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @jobs.each do |job| %>
+            <tr>
+              <td><%= job.source %></td>
+              <td><code><%= job.id %></code></td>
+              <td><code><%= job.name %></code></td>
+              <td>
+                <span class="am-badge <%= job_status_badge_class(job.status) %>"><%= job.status %></span>
+              </td>
+              <td>
+                <% bits = [job.queue, job.tenant].compact %>
+                <%= bits.any? ? bits.join(" · ") : "—" %>
+              </td>
+              <td>
+                <% when_at = job.failed_at || job.run_at %>
+                <% if when_at %>
+                  <%= time_ago_in_words(when_at) %> ago
+                  <div class="meta"><%= l(when_at, format: :short) rescue when_at %></div>
+                <% else %>
+                  —
+                <% end %>
+              </td>
+              <td><code class="am-tags"><%= job.error.presence || "—" %></code></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="am-empty">No live jobs matched these filters (or backends are unavailable).</p>
+  <% end %>
+</section>

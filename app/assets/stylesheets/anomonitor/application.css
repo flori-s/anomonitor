@@ -222,6 +222,77 @@
   padding: 1rem 0;
 }
 
+.am-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+  border-radius: 6px;
+}
+
+.am-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-family: var(--am-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--am-muted);
+}
+
+.am-filters select,
+.am-filters input {
+  font-family: var(--am-font);
+  font-size: 0.9rem;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--am-text);
+  background: var(--am-surface-2);
+  border: 1px solid var(--am-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.55rem;
+  min-width: 9rem;
+}
+
+.am-btn {
+  font-family: var(--am-font);
+  font-size: 0.9rem;
+  color: var(--am-bg);
+  background: var(--am-accent);
+  border: none;
+  border-radius: 4px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.am-btn:hover { opacity: 0.9; }
+
+.am-health-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.45rem;
+  font-family: var(--am-mono);
+  font-size: 0.78rem;
+  color: var(--am-muted);
+}
+
+.am-health-metrics strong {
+  color: var(--am-text);
+  font-weight: 500;
+}
+
+.am-jobs-table .meta {
+  font-size: 0.75rem;
+  color: var(--am-muted);
+  margin-top: 0.15rem;
+}
+
 .am-detail {
   background: var(--am-surface);
   border: 1px solid var(--am-border);

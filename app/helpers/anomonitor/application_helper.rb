@@ -48,5 +48,20 @@ module Anomonitor
 
       "#{time_ago_in_words(last)} ago"
     end
+
+    def format_metric(value)
+      return "—" if value.nil?
+
+      number_with_precision(value, precision: 0, delimiter: ",")
+    end
+
+    def job_status_badge_class(status)
+      case status.to_s
+      when "failed" then "danger"
+      when "locked" then "warn"
+      when "pending" then "ok"
+      else ""
+      end
+    end
   end
 end
