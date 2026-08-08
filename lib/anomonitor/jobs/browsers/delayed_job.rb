@@ -44,11 +44,18 @@ module Anomonitor
 
         def fetch_scope(klass, filters, tenant)
           scope = apply_status(klass.all, filters[:status])
+          if filters[:queue] && klass.column_names.include?("queue")
+            scope = scope.where(queue: filters[:queue])
+          end
           scope = scope.order(Arel.sql("COALESCE(failed_at, run_at, created_at) DESC"))
           scope.limit(PER_TENANT).map { |job| row_for(job, tenant) }
         rescue StandardError
           # SQLite / adapters without Arel.sql coalesce ordering
-          apply_status(klass.all, filters[:status]).limit(PER_TENANT).map { |job| row_for(job, tenant) }
+          scope = apply_status(klass.all, filters[:status])
+          if filters[:queue] && klass.column_names.include?("queue")
+            scope = scope.where(queue: filters[:queue])
+          end
+          scope.limit(PER_TENANT).map { |job| row_for(job, tenant) }
         end
 
         def apply_status(scope, status)

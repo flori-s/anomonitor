@@ -32,9 +32,9 @@ class JobsBrowserTest < AnomonitorTestCase
   end
 
   def test_table_delayed_job_style_filters
-    IndexJob.create!(tenant: "acme", run_at: 2.minutes.ago, failed_at: nil, locked_at: nil, locked_by: nil)
-    IndexJob.create!(tenant: "acme", run_at: 1.minute.ago, failed_at: Time.current, locked_at: nil, locked_by: nil)
-    IndexJob.create!(tenant: "beta", run_at: 1.minute.ago, failed_at: nil, locked_at: Time.current, locked_by: "worker")
+    IndexJob.create!(tenant: "acme", queue: "default", run_at: 2.minutes.ago, failed_at: nil, locked_at: nil, locked_by: nil)
+    IndexJob.create!(tenant: "acme", queue: "mailers", run_at: 1.minute.ago, failed_at: Time.current, locked_at: nil, locked_by: nil)
+    IndexJob.create!(tenant: "beta", queue: "default", run_at: 1.minute.ago, failed_at: nil, locked_at: Time.current, locked_by: "worker")
 
     Anomonitor.configure do |c|
       c.collectors.sidekiq = false
@@ -65,6 +65,10 @@ class JobsBrowserTest < AnomonitorTestCase
 
     acme = Anomonitor::Jobs::Browser.fetch(status: "all", tenant: "acme")
     assert_equal 2, acme.size
+
+    mailers = Anomonitor::Jobs::Browser.fetch(status: "all", queue: "mailers")
+    assert_equal 1, mailers.size
+    assert_equal "mailers", mailers.first.queue
   end
 
   def test_table_status_style_filters

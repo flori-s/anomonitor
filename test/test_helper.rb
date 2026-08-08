@@ -83,11 +83,13 @@ ActiveRecord::Schema.define do
 
   create_table :jobs, force: true do |t|
     t.string :status
+    t.string :queue
     t.timestamps
   end
 
   create_table :index_jobs, force: true do |t|
     t.string :tenant
+    t.string :queue
     t.datetime :run_at
     t.datetime :locked_at
     t.datetime :failed_at

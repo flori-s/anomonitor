@@ -42,6 +42,9 @@ module Anomonitor
         def delayed_job_rows(scope, filters)
           cols = scope.klass.column_names
           scope = apply_delayed_status(scope, filters[:status], cols)
+          if filters[:queue] && cols.include?("queue")
+            scope = scope.where(queue: filters[:queue])
+          end
           order_col = %w[failed_at run_at created_at updated_at].find { |c| cols.include?(c) }
           scope = scope.order(order_col => :desc) if order_col
           scope.limit(LIMIT).map { |record| delayed_row(record, cols) }
@@ -105,6 +108,10 @@ module Anomonitor
             return []
           end
 
+          if filters[:queue] && cols.include?("queue")
+            scope = scope.where(queue: filters[:queue])
+          end
+
           order_col = %w[updated_at created_at].find { |c| cols.include?(c) }
           scope = scope.order(order_col => :desc) if order_col
           scope.limit(LIMIT).map { |record| status_row(record, cols, status_col) }
@@ -159,7 +166,7 @@ module Anomonitor
             id: record.id,
             name: record_name(record),
             status: mapped,
-            queue: nil,
+            queue: cols.include?("queue") ? record.queue : nil,
             tenant: tenant,
             run_at: run_at,
             failed_at: mapped == "failed" ? run_at : nil,
