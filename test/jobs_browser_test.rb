@@ -162,4 +162,23 @@ class JobsBrowserTest < AnomonitorTestCase
     assert_equal 1, rows.size
     assert_equal "table:supp_jobs", rows.first.source
   end
+
+  def test_query_filters_job_name
+    IndexJob.create!(tenant: "acme", queue: "default", run_at: 1.minute.ago, failed_at: nil, locked_at: nil, locked_by: nil)
+
+    Anomonitor.configure do |c|
+      c.collectors.sidekiq = false
+      c.collectors.delayed_job = false
+      c.collectors.solid_queue = false
+      c.table :supp_jobs do |t|
+        t.model = "IndexJob"
+        t.style = :delayed_job
+        t.tenant = :tenant
+      end
+    end
+
+    assert_equal 1, Anomonitor::Jobs::Browser.fetch(status: "all").size
+    assert_empty Anomonitor::Jobs::Browser.fetch(status: "all", q: "NopeJob")
+    assert_equal 1, Anomonitor::Jobs::Browser.fetch(status: "all", q: "IndexJob").size
+  end
 end

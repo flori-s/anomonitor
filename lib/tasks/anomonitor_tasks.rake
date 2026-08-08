@@ -11,6 +11,17 @@ namespace :anomonitor do
         Anomonitor::Poller.instance.tick
       end
 
-    puts "Collected #{points.size} metric points (poll_mode=#{Anomonitor.config.poll_mode})"
+    puts "Collected #{Array(points).size} metric points (poll_mode=#{Anomonitor.config.poll_mode})"
+  end
+
+  desc "Retry failed anomaly webhook deliveries"
+  task retry_webhooks: :environment do
+    scope = Anomonitor::Anomaly.webhook_failed.order(created_at: :desc)
+    total = scope.count
+    ok = 0
+    scope.find_each do |anomaly|
+      ok += 1 if anomaly.retry_webhook!
+    end
+    puts "Retried #{total} failed webhooks — #{ok} delivered"
   end
 end

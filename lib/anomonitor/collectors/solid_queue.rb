@@ -10,12 +10,11 @@ module Anomonitor
         end
 
         points = []
-        points << count_point("ready", "solid_queue_ready_executions")
         points << count_point("claimed", "solid_queue_claimed_executions")
         points << count_point("failed", "solid_queue_failed_executions")
         points << count_point("scheduled", "solid_queue_scheduled_executions")
 
-        if table_exists?("solid_queue_jobs")
+        if table_exists?("solid_queue_ready_executions")
           points << point(
             source: "solid_queue",
             metric: "queue_depth",

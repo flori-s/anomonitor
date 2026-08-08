@@ -39,6 +39,7 @@ module Anomonitor
           Anomonitor.logger.warn("[Anomonitor] Jobs browser (#{adapter.source_key}) error: #{e.message}")
         end
 
+        rows = filter_query(rows)
         rows.sort_by { |r| r.sort_at }.reverse.first(@filters[:limit])
       end
 
@@ -47,6 +48,14 @@ module Anomonitor
       end
 
       private
+
+      def filter_query(rows)
+        q = @filters[:q]
+        return rows if q.nil? || q.empty?
+
+        needle = q.downcase
+        rows.select { |r| r.name.to_s.downcase.include?(needle) || r.id.to_s.downcase.include?(needle) }
+      end
 
       def normalize(filters)
         raw = filters.respond_to?(:to_unsafe_h) ? filters.to_unsafe_h : filters
@@ -59,6 +68,7 @@ module Anomonitor
           status: status,
           tenant: raw[:tenant].presence,
           queue: raw[:queue].presence,
+          q: raw[:q].to_s.strip.presence,
           limit: (raw[:limit] || DEFAULT_LIMIT).to_i.clamp(1, 500)
         }
       end

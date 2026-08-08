@@ -3,7 +3,7 @@
 require "test_helper"
 
 class TableCollectorTest < AnomonitorTestCase
-  def test_collects_active_and_growth
+  def test_collects_queue_depth_and_growth
     Job.create!(status: "pending", created_at: Time.current)
     Job.create!(status: "running", created_at: Time.current)
     Job.create!(status: "done", created_at: 1.hour.ago)
@@ -21,8 +21,9 @@ class TableCollectorTest < AnomonitorTestCase
     source = Anomonitor.config.tables.first
     points = Anomonitor::Collectors::Table.new(source).collect
 
-    active = points.find { |p| p.metric == "active" }
-    assert_equal 2, active.value
+    depth = points.find { |p| p.metric == "queue_depth" }
+    assert_equal 2, depth.value
+    refute points.any? { |p| p.metric == "active" }
 
     growth = points.find { |p| p.metric == "growth_rate" }
     assert growth

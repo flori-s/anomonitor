@@ -20,6 +20,8 @@ module Anomonitor
     # Apartment apps that wrap migrations with public-only guards).
 
     config.after_initialize do
+      Anomonitor::ConfigurationValidator.new(Anomonitor.config).log!
+
       # :thread starts an in-process poller; :cron relies on `rails anomonitor:poll`
       next unless Anomonitor.config.poll_mode == :thread
       next unless Anomonitor.config.auto_start

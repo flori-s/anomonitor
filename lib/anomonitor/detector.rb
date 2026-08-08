@@ -30,7 +30,7 @@ module Anomonitor
 
     def metric_matches?(rule, point)
       point.metric.to_s == rule.metric.to_s ||
-        (rule.spike? && %w[growth_rate queue_depth active].include?(point.metric.to_s) && rule.metric.to_s == "growth_spike") ||
+        (rule.spike? && %w[growth_rate queue_depth].include?(point.metric.to_s) && rule.metric.to_s == "growth_spike") ||
         (rule.threshold? && point.metric.to_s == rule.metric.to_s)
     end
 
@@ -66,23 +66,24 @@ module Anomonitor
       return tags_previous.to_f if tags_previous
 
       window = spike_window_seconds
-      prior = Anomonitor::MetricSample
+      queue = point.tags[:queue] || point.tags["queue"]
+      tenant = point.tags[:tenant] || point.tags["tenant"]
+
+      scope = Anomonitor::MetricSample
               .where(source: point.source, metric: point.metric)
               .where("sampled_at >= ? AND sampled_at < ?", (window * 2).seconds.ago, window.seconds.ago)
               .order(sampled_at: :desc)
-              .limit(5)
 
-      if point.tags[:queue] || point.tags["queue"]
-        queue = point.tags[:queue] || point.tags["queue"]
-        prior = prior.select { |s| (s.tags || {})["queue"] == queue || (s.tags || {})[:queue] == queue }
+      # Pull a wider window then filter tags in Ruby (portable across JSON/text adapters)
+      candidates = scope.limit(100).to_a
+      if queue
+        candidates.select! { |s| (s.tags || {})["queue"] == queue || (s.tags || {})[:queue] == queue }
+      end
+      if tenant
+        candidates.select! { |s| (s.tags || {})["tenant"] == tenant || (s.tags || {})[:tenant] == tenant }
       end
 
-      if point.tags[:tenant] || point.tags["tenant"]
-        tenant = point.tags[:tenant] || point.tags["tenant"]
-        prior = prior.select { |s| (s.tags || {})["tenant"] == tenant || (s.tags || {})[:tenant] == tenant }
-      end
-
-      values = prior.map(&:value)
+      values = candidates.first(5).map(&:value)
       return nil if values.empty?
 
       values.sum / values.size.to_f
@@ -128,7 +129,11 @@ module Anomonitor
 
     def cooling_down?(key, point = nil)
       if point&.sticky?
-        Anomonitor::Anomaly.where(cooldown_key: key, resolved_at: nil).exists?
+        return true if Anomonitor::Anomaly.where(cooldown_key: key, resolved_at: nil).exists?
+
+        # Manual ack: stay silent for this fingerprint until a clear poll marks cleared_at
+        latest = Anomonitor::Anomaly.where(cooldown_key: key).order(created_at: :desc).first
+        latest&.manual_resolve? && !latest.cleared_after_ack?
       else
         cooldown = Anomonitor.config.cooldown.to_i
         Anomonitor::Anomaly
@@ -159,12 +164,17 @@ module Anomonitor
       return if observed_bases.empty?
 
       bases = observed_bases.uniq
-      Anomonitor::Anomaly.where(source: "schema_drift", resolved_at: nil).find_each do |anomaly|
-        next if active_keys.include?(anomaly.cooldown_key)
+      Anomonitor::Anomaly.where(source: "schema_drift").find_each do |anomaly|
         next unless bases.include?(anomaly_sticky_base(anomaly))
+        next if active_keys.include?(anomaly.cooldown_key)
 
-        anomaly.update!(resolved_at: Time.current)
-        @notifier.deliver(anomaly, event: Notifiers::RESOLVED)
+        if anomaly.open?
+          anomaly.update!(resolved_at: Time.current)
+          @notifier.deliver(anomaly, event: Notifiers::RESOLVED)
+        elsif anomaly.manual_resolve? && !anomaly.cleared_after_ack?
+          anomaly.merge_tags!("cleared_at" => Time.current.iso8601)
+          anomaly.save!
+        end
       end
     rescue StandardError => e
       Anomonitor.logger.warn("[Anomonitor] Failed to resolve sticky anomalies: #{e.message}")

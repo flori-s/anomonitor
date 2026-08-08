@@ -20,9 +20,17 @@
         <%= link_to "Jobs", jobs_path %>
         <%= link_to "Anomalies", anomalies_path %>
         <%= link_to "Metrics", metrics_path %>
+        <%= link_to "JSON", metrics_json_path %>
+        <%= link_to "Prom", metrics_prom_path %>
       </nav>
     </header>
     <main class="am-main">
+      <% if flash[:notice].present? %>
+        <p class="am-flash ok"><%= flash[:notice] %></p>
+      <% end %>
+      <% if flash[:alert].present? %>
+        <p class="am-flash warn"><%= flash[:alert] %></p>
+      <% end %>
       <%= yield %>
     </main>
   </div>

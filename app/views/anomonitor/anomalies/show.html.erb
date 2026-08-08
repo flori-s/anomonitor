@@ -3,6 +3,17 @@
 <h1>Anomaly #<%= @anomaly.id %></h1>
 <p class="am-lead"><%= @anomaly.rule %> on <%= @anomaly.source %> / <%= @anomaly.metric %></p>
 
+<div class="am-actions">
+  <% if @anomaly.open? %>
+    <%= button_to "Resolve / ack", resolve_anomaly_path(@anomaly), method: :post, class: "am-btn" %>
+  <% else %>
+    <%= button_to "Allow alerts again", reopen_anomaly_path(@anomaly), method: :post, class: "am-btn am-btn-muted" %>
+  <% end %>
+  <% if @anomaly.webhook_failed? %>
+    <%= button_to "Retry webhook", retry_webhook_anomaly_path(@anomaly), method: :post, class: "am-btn am-btn-warn" %>
+  <% end %>
+</div>
+
 <dl class="am-detail">
   <dt>Severity</dt>
   <dd><span class="am-badge <%= @anomaly.severity %>"><%= @anomaly.severity %></span></dd>
@@ -20,15 +31,20 @@
   <dd><%= @anomaly.webhook_status %><%= " @ #{@anomaly.webhook_delivered_at}" if @anomaly.webhook_delivered_at %></dd>
 
   <dt>Status</dt>
-  <dd><%= @anomaly.resolved_at ? "resolved @ #{@anomaly.resolved_at}" : "open" %></dd>
+  <dd>
+    <%= @anomaly.resolved_at ? "resolved @ #{@anomaly.resolved_at}" : "open" %>
+    <% if @anomaly.manual_resolve? %>
+      <span class="am-badge warn">manual ack</span>
+    <% end %>
+  </dd>
 
   <dt>Cooldown key</dt>
   <dd><%= @anomaly.cooldown_key %></dd>
 
-  <% tags = @anomaly.tags.is_a?(Hash) ? @anomaly.tags : {} %>
-  <% if tags["items"] || tags[:items] %>
-    <dt>Items</dt>
-    <dd class="am-tags"><%= tags["items"] || tags[:items] %><% if (tags["item_count"] || tags[:item_count]).to_i > 25 %> (showing first 25 of <%= tags["item_count"] || tags[:item_count] %>)<% end %></dd>
+  <% items = @anomaly.items_list %>
+  <% if items.any? %>
+    <dt>Items (<%= items.size %>)</dt>
+    <dd class="am-tags"><%= items.join("\n") %></dd>
   <% end %>
 
   <dt>Tags</dt>

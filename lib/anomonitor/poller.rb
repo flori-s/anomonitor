@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "singleton"
+require "fileutils"
 
 module Anomonitor
   class Poller
@@ -30,21 +31,29 @@ module Anomonitor
     end
 
     def stop
+      thread = nil
       @mutex.synchronize do
         @running = false
-        @thread&.kill
+        thread = @thread
         @thread = nil
       end
+      return unless thread
+
+      # Prefer a cooperative stop over Thread#kill mid-insert/webhook
+      thread.join(Anomonitor.config.poll_interval.to_i + 5)
+      thread.kill if thread.alive?
     end
 
     def tick
-      points = collect_all
-      persist(points)
-      Detector.new.evaluate(points)
-      prune_old_records
-      @last_run_at = Time.current
-      @last_error = nil
-      points
+      PollLock.with_lock do
+        points = collect_all
+        persist(points)
+        Detector.new.evaluate(points)
+        prune_old_records
+        @last_run_at = Time.current
+        @last_error = nil
+        points
+      end
     rescue StandardError => e
       @last_error = e.message
       Anomonitor.logger.warn("[Anomonitor] Poller tick failed: #{e.message}")
@@ -59,7 +68,8 @@ module Anomonitor
         last_error: @last_error,
         collectors: @collector_status,
         poll_interval: Anomonitor.config.poll_interval,
-        schema_drift_interval: Anomonitor.config.schema_drift_interval
+        schema_drift_interval: Anomonitor.config.schema_drift_interval,
+        poll_lock: Anomonitor.config.poll_lock
       }
     end
 
@@ -142,7 +152,6 @@ module Anomonitor
 
       cutoff = days.days.ago
       Anomonitor::MetricSample.where("sampled_at < ?", cutoff).delete_all
-      # Keep open schema-drift anomalies until resolved; prune everything else by age
       Anomonitor::Anomaly
         .where("created_at < ?", cutoff)
         .where("NOT (source = ? AND resolved_at IS NULL)", "schema_drift")

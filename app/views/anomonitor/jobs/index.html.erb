@@ -72,6 +72,10 @@
       <span>Queue</span>
       <input type="text" name="queue" value="<%= @filters[:queue] %>" placeholder="queue name">
     </label>
+    <label>
+      <span>Search</span>
+      <input type="text" name="q" value="<%= @filters[:q] %>" placeholder="job class / name">
+    </label>
     <button type="submit" class="am-btn">Filter</button>
   <% end %>
 

@@ -272,6 +272,37 @@
 
 .am-btn:hover { opacity: 0.9; }
 
+.am-btn-muted {
+  background: var(--am-surface-2);
+  color: var(--am-text);
+  border: 1px solid var(--am-border);
+}
+
+.am-btn-warn {
+  background: var(--am-warn);
+  color: var(--am-bg);
+}
+
+.am-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.am-flash {
+  font-family: var(--am-mono);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background: var(--am-surface);
+  border: 1px solid var(--am-border);
+}
+
+.am-flash.ok { border-color: var(--am-ok); color: var(--am-ok); }
+.am-flash.warn { border-color: var(--am-warn); color: var(--am-warn); }
+
 .am-health-metrics {
   display: flex;
   flex-wrap: wrap;

@@ -57,7 +57,6 @@ module Anomonitor
           active_scope = scope.where(@source.status => @source.active)
         end
 
-        points << point(source: source_name, metric: "active", value: active_scope.count, tags: tags)
         points << point(source: source_name, metric: "queue_depth", value: active_scope.count, tags: tags)
 
         timestamp = @source.timestamp || :created_at

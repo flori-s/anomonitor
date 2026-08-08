@@ -132,6 +132,7 @@ module Anomonitor
             tags: {
               tenant: tenant,
               items: items.first(25).join(","),
+              items_list: items,
               item_count: items.size,
               items_digest: digest
             }.compact

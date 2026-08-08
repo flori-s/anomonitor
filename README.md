@@ -212,9 +212,22 @@ Samples and resolved anomalies older than `retention_days` are pruned (open sche
 Open `/anomonitor` for:
 
 - Current metric cards and mini history bars
-- **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue)
-- Open anomalies (filter open / resolved / all) + delivery status
+- **Jobs** — per-collector health plus a read-only live job browser (filter by source, status, tenant, queue, search)
+- Open anomalies (filter open / resolved / all) + resolve/ack, reopen, retry webhook
 - Poller health (last run, collector status)
+
+### Metrics export
+
+- JSON: `/anomonitor/metrics.json`
+- Prometheus text: `/anomonitor/metrics.prom`
+
+### Retry failed webhooks
+
+```bash
+rails anomonitor:retry_webhooks
+```
+
+`c.poll_lock = true` (default) skips overlapping ticks via Postgres advisory lock or a tmp file lock. Prefer `poll_mode = :cron` in multi-worker setups.
 
 ## Manual poll
 

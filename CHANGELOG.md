@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+- Manual resolve/ack and reopen on anomaly detail (sticky silence until clear)
+- Retry failed webhooks from UI and `rails anomonitor:retry_webhooks`
+- Full schema-drift `items_list` in tags (detail page shows all items)
+- Boot config warnings (`ConfigurationValidator`)
+- Jobs browser search (`q`) by job class/name
+- Metrics export: `/anomonitor/metrics.json` and `/anomonitor/metrics.prom`
+- Poll advisory/file lock (`c.poll_lock`, default on) + cooperative thread stop
+- Spike baselines sample more candidates before tag filter
+- Dedupe Solid Queue / status-table metrics (single `queue_depth`)
+- Remove unused `ApplicationJob`
+
 ## 0.4.1
 
 - Pluggable `c.notifier` (callable / `#deliver` / array) + `Anomonitor::Notifiers.payload` for host transports like `Webhook::Broadcast`

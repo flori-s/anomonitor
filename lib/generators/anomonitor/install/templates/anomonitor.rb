@@ -20,6 +20,8 @@ Anomonitor.configure do |c|
   c.dashboard_path = "/anomonitor"
   # Schema drift is heavier — poll less often than queue metrics (seconds)
   c.schema_drift_interval = 15 * 60
+  # Prevent double-poll under multi-worker (pg advisory lock or tmp file lock)
+  c.poll_lock = true
 
   # Polling:
   #   :thread — in-process background poller (default; uses poll_interval)

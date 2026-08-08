@@ -6,7 +6,7 @@ module Anomonitor
                   :dashboard_path, :dashboard_base_url,
                   :tenants, :exclude_tenants, :tenant_switch,
                   :schema_drift_exclude, :schema_drift_interval,
-                  :authenticate, :notifier
+                  :authenticate, :notifier, :poll_lock
 
     attr_reader :collectors, :tables, :alerts, :poll_mode, :auto_start
 
@@ -20,6 +20,7 @@ module Anomonitor
       @dashboard_base_url = nil
       @schema_drift_interval = 15 * 60
       @authenticate = nil
+      @poll_lock = true
       @poll_mode = :thread
       @auto_start = true
       @collectors = CollectorsConfig.new

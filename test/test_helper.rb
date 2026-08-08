@@ -32,6 +32,9 @@ require "anomonitor/notifiers"
 require "anomonitor/notifiers/callable"
 require "anomonitor/notifiers/composite"
 require "anomonitor/notifiers/webhook"
+require "anomonitor/configuration_validator"
+require "anomonitor/metrics_export"
+require "anomonitor/poll_lock"
 require "anomonitor/detector"
 require "anomonitor/poller"
 
@@ -108,6 +111,21 @@ module Anomonitor
   class MetricSample < ApplicationRecord
     self.table_name = "anomonitor_metric_samples"
 
+    scope :recent, ->(hours = 24) { where("sampled_at >= ?", hours.hours.ago) }
+
+    def self.latest_by_source_metric
+      recent(6).order(sampled_at: :desc).each_with_object({}) do |sample, hash|
+        key = [sample.source, sample.metric, sample.tags]
+        hash[key] ||= sample
+      end.values
+    end
+
+    def self.series(source:, metric:, hours: 24)
+      where(source: source, metric: metric)
+        .where("sampled_at >= ?", hours.hours.ago)
+        .order(:sampled_at)
+    end
+
     def tags
       raw = read_attribute(:tags)
       return {} if raw.nil? || raw == ""
@@ -125,6 +143,7 @@ module Anomonitor
     scope :recent, -> { order(created_at: :desc) }
     scope :open, -> { where(resolved_at: nil) }
     scope :resolved, -> { where.not(resolved_at: nil) }
+    scope :webhook_failed, -> { where(webhook_status: "failed") }
 
     def open?
       resolved_at.nil?
@@ -132,6 +151,85 @@ module Anomonitor
 
     def resolved?
       !open?
+    end
+
+    def webhook_failed?
+      webhook_status.to_s == "failed"
+    end
+
+    def manual_resolve?
+      tag_value("resolved_by").to_s == "manual"
+    end
+
+    def cleared_after_ack?
+      tag_value("cleared_at").present?
+    end
+
+    def resolve!(by: "auto", notify: false)
+      return self if resolved?
+
+      merge_tags!("resolved_by" => by.to_s)
+      update!(resolved_at: Time.current)
+      if notify
+        Anomonitor.config.build_notifier.deliver(self, event: Anomonitor::Notifiers::RESOLVED)
+      end
+      self
+    end
+
+    def reopen!
+      if open?
+        merge_tags!("reopened_at" => Time.current.iso8601)
+        save!
+        return self
+      end
+
+      merge_tags!(
+        "cleared_at" => Time.current.iso8601,
+        "reopened_at" => Time.current.iso8601
+      )
+      save!
+      self
+    end
+
+    def retry_webhook!
+      delivered = Anomonitor.config.build_notifier.deliver(
+        self,
+        event: resolved? ? Anomonitor::Notifiers::RESOLVED : Anomonitor::Notifiers::DETECTED
+      )
+      update!(
+        webhook_status: delivered ? "delivered" : "failed",
+        webhook_delivered_at: delivered ? Time.current : webhook_delivered_at
+      )
+      delivered
+    end
+
+    def items_list
+      list = tag_value("items_list")
+      return Array(list) if list.is_a?(Array)
+
+      items = tag_value("items")
+      return [] if items.nil? || items.to_s.empty?
+
+      items.to_s.split(",").map(&:strip)
+    end
+
+    def tag_value(key)
+      t = tags
+      return nil unless t.is_a?(Hash)
+
+      t[key.to_s] || t[key.to_sym]
+    end
+
+    def merge_tags!(extra)
+      current = tags.is_a?(Hash) ? tags.stringify_keys : {}
+      extra.stringify_keys.each do |k, v|
+        if v.nil?
+          current.delete(k)
+        else
+          current[k] = v
+        end
+      end
+      self.tags = current
     end
 
     def tags
