@@ -77,6 +77,7 @@ ActiveRecord::Schema.define do
     t.datetime :sampled_at
     t.string :webhook_status, default: "pending"
     t.datetime :webhook_delivered_at
+    t.datetime :resolved_at
     t.timestamps
   end
 

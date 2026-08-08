@@ -53,4 +53,87 @@ class DetectorTest < AnomonitorTestCase
     assert_equal 1, first.size
     assert_empty second
   end
+
+  def test_schema_drift_stays_silent_until_resolved
+    Anomonitor.configure do |c|
+      c.cooldown = 1
+      c.alert :missing_tables, max: 0
+    end
+
+    point = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 2,
+      tags: { tenant: "acme", items: "users,orders", item_count: 2 }
+    )
+    detector = Anomonitor::Detector.new
+
+    first = detector.evaluate([point])
+    second = detector.evaluate([point])
+
+    assert_equal 1, first.size
+    assert_nil first.first.resolved_at
+    assert_empty second
+  end
+
+  def test_schema_drift_renotifies_after_clear
+    Anomonitor.configure do |c|
+      c.cooldown = 1
+      c.alert :missing_tables, max: 0
+    end
+
+    drifting = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 1,
+      tags: { tenant: "acme", items: "users", item_count: 1 }
+    )
+    clear = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 0,
+      tags: { tenant: "acme", items: "", item_count: 0 }
+    )
+    detector = Anomonitor::Detector.new
+
+    first = detector.evaluate([drifting])
+    detector.evaluate([clear])
+    first.first.reload
+
+    assert_equal 1, first.size
+    refute_nil first.first.resolved_at
+
+    again = detector.evaluate([drifting])
+    assert_equal 1, again.size
+  end
+
+  def test_schema_drift_renotifies_when_items_change
+    Anomonitor.configure do |c|
+      c.cooldown = 1
+      c.alert :missing_tables, max: 0
+    end
+
+    first_items = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 1,
+      tags: { tenant: "acme", items: "users", item_count: 1 }
+    )
+    more_items = Anomonitor::MetricPoint.new(
+      source: "schema_drift",
+      metric: "missing_tables",
+      value: 2,
+      tags: { tenant: "acme", items: "users,orders", item_count: 2 }
+    )
+    detector = Anomonitor::Detector.new
+
+    first = detector.evaluate([first_items])
+    second = detector.evaluate([more_items])
+    first.first.reload
+
+    assert_equal 1, first.size
+    assert_equal 1, second.size
+    refute_nil first.first.resolved_at
+    assert_nil second.first.resolved_at
+  end
 end

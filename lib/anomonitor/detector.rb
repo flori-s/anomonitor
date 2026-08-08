@@ -7,17 +7,22 @@ module Anomonitor
     end
 
     def evaluate(points)
-      return [] if points.empty?
-
+      @active_sticky_keys = []
+      @observed_sticky_bases = []
       anomalies = []
-      Anomonitor.config.alerts.each do |rule|
-        points.each do |point|
-          next unless metric_matches?(rule, point)
 
-          anomaly = detect(rule, point)
-          anomalies << anomaly if anomaly
+      unless points.empty?
+        Anomonitor.config.alerts.each do |rule|
+          points.each do |point|
+            next unless metric_matches?(rule, point)
+
+            anomaly = detect(rule, point)
+            anomalies << anomaly if anomaly
+          end
         end
       end
+
+      resolve_sticky_anomalies(@active_sticky_keys, @observed_sticky_bases)
       anomalies
     end
 
@@ -31,6 +36,7 @@ module Anomonitor
 
     def detect(rule, point)
       if rule.threshold? && point.metric.to_s == rule.metric.to_s
+        note_sticky_observation(point) if point.sticky?
         return nil unless point.value > rule.max
 
         create_anomaly(rule, point, threshold: rule.max, reason: "threshold")
@@ -91,7 +97,9 @@ module Anomonitor
 
     def create_anomaly(rule, point, threshold:, reason:, extra: {})
       key = "#{reason}:#{point.cooldown_key}"
-      return nil if cooling_down?(key)
+      @active_sticky_keys << key if point.sticky?
+
+      return nil if cooling_down?(key, point)
 
       anomaly = Anomonitor::Anomaly.create!(
         rule: reason,
@@ -103,7 +111,8 @@ module Anomonitor
         cooldown_key: key,
         tags: point.tags.merge(extra),
         sampled_at: point.sampled_at,
-        webhook_status: "pending"
+        webhook_status: "pending",
+        resolved_at: nil
       )
 
       delivered = @notifier.deliver(anomaly)
@@ -117,12 +126,47 @@ module Anomonitor
       nil
     end
 
-    def cooling_down?(key)
-      cooldown = Anomonitor.config.cooldown.to_i
-      Anomonitor::Anomaly
-        .where(cooldown_key: key)
-        .where("created_at >= ?", cooldown.seconds.ago)
-        .exists?
+    def cooling_down?(key, point = nil)
+      if point&.sticky?
+        Anomonitor::Anomaly.where(cooldown_key: key, resolved_at: nil).exists?
+      else
+        cooldown = Anomonitor.config.cooldown.to_i
+        Anomonitor::Anomaly
+          .where(cooldown_key: key)
+          .where("created_at >= ?", cooldown.seconds.ago)
+          .exists?
+      end
+    end
+
+    def note_sticky_observation(point)
+      @observed_sticky_bases << sticky_base(point)
+    end
+
+    def sticky_base(point)
+      tenant = point.tags[:tenant] || point.tags["tenant"]
+      [point.source, point.metric, tenant].compact.join(":")
+    end
+
+    def anomaly_sticky_base(anomaly)
+      tags = anomaly.tags.is_a?(Hash) ? anomaly.tags : {}
+      tenant = tags["tenant"] || tags[:tenant]
+      [anomaly.source, anomaly.metric, tenant].compact.join(":")
+    end
+
+    # Resolve open schema-drift alerts only when that tenant/metric was observed this tick
+    # and the fingerprint is no longer active (cleared or items changed).
+    def resolve_sticky_anomalies(active_keys, observed_bases)
+      return if observed_bases.empty?
+
+      bases = observed_bases.uniq
+      Anomonitor::Anomaly.where(source: "schema_drift", resolved_at: nil).find_each do |anomaly|
+        next if active_keys.include?(anomaly.cooldown_key)
+        next unless bases.include?(anomaly_sticky_base(anomaly))
+
+        anomaly.update_columns(resolved_at: Time.current)
+      end
+    rescue StandardError => e
+      Anomonitor.logger.warn("[Anomonitor] Failed to resolve sticky anomalies: #{e.message}")
     end
   end
 end

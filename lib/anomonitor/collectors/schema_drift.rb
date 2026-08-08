@@ -112,9 +112,8 @@ module Anomonitor
         end
       end
 
+      # Always emit (including zeros) so the detector can resolve sticky alerts when drift clears.
       def drift_points(tenant, metric, items)
-        return [] if items.empty?
-
         [
           point(
             source: "schema_drift",

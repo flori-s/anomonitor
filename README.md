@@ -77,6 +77,8 @@ end
 
 `schema_drift_exclude` accepts exact names or `File.fnmatch` globs (`a*` matches all a-prefixed tables; `a_*` only matches `a_…`).
 
+Schema drift webhooks are **sticky**: one notify per tenant/metric/item-set, then silence until the drift clears or the missing/extra set changes. Queue threshold and growth alerts still use `c.cooldown` (default 15 minutes).
+
 ### Custom tables
 
 Status-based queues:

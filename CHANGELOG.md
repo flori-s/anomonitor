@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2
+
+- Schema drift alerts are sticky: notify once, stay silent until the drift clears or the item set changes (no 15‑minute re-alerts)
+- Anomalies gain `resolved_at` for sticky resolution
+
 ## 0.3.1
 
 - Update slack text ```"<#{dashboard}|Open anomaly>" -> "<#{dashboard}>"```
