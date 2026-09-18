@@ -5,6 +5,7 @@
 - Cron poll persists a `poll_tick` heartbeat per collector so Jobs health shows "collector ok" (not "no poll yet") after `rails anomonitor:poll`
 - Custom table collectors always emit an untagged aggregate (and zeros when empty); Jobs cards sum per-tenant samples when no aggregate exists
 - Delayed Job / table metrics include `scheduled` (`run_at` in the future); live jobs label those rows `scheduled`
+- Fix JSON/Prom header links: `/metrics.json` was routed to the HTML metrics index (`UnknownFormat`)
 
 ## 0.6.1
 

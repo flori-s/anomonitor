@@ -21,8 +21,8 @@
         <%= link_to "Anomalies", anomalies_path %>
         <%= link_to "Mutes", mutes_path %>
         <%= link_to "Metrics", metrics_path %>
-        <%= link_to "JSON", metrics_json_path %>
-        <%= link_to "Prom", metrics_prom_path %>
+        <%= link_to "JSON", metrics_json_path, title: "Latest metrics as JSON" %>
+        <%= link_to "Prom", metrics_prom_path, title: "Prometheus text exposition" %>
       </nav>
     </header>
     <main class="am-main">

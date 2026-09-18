@@ -12,6 +12,9 @@ class EngineSurfaceTest < AnomonitorTestCase
     assert_includes content, "resources :mutes"
     assert_includes content, "metrics.json"
     assert_includes content, 'get "jobs"'
+    json_at = content.index("metrics.json")
+    html_at = content.index('get "metrics"')
+    assert json_at && html_at && json_at < html_at, "metrics.json must be declared before metrics HTML"
   end
 
   def test_mute_model_matching
