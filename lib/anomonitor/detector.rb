@@ -14,6 +14,7 @@ module Anomonitor
       unless points.empty?
         Anomonitor.config.alerts.each do |rule|
           points.each do |point|
+            next if point.metric.to_s == CollectorStatus::METRIC
             next unless metric_matches?(rule, point)
             next unless rule.matches_point?(point)
 

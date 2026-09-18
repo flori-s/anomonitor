@@ -90,6 +90,25 @@ class JobsBrowserTest < AnomonitorTestCase
     assert_equal 1, pending.size
   end
 
+  def test_delayed_job_style_all_labels_future_run_at_scheduled
+    IndexJob.create!(tenant: "acme", queue: "default", run_at: 1.hour.from_now, failed_at: nil, locked_at: nil, locked_by: nil)
+
+    Anomonitor.configure do |c|
+      c.collectors.sidekiq = false
+      c.collectors.delayed_job = false
+      c.collectors.solid_queue = false
+      c.table :supp_jobs do |t|
+        t.model = "IndexJob"
+        t.style = :delayed_job
+        t.tenant = :tenant
+      end
+    end
+
+    all = Anomonitor::Jobs::Browser.fetch(status: "all")
+    assert_equal 1, all.size
+    assert_equal "scheduled", all.first.status
+  end
+
   def test_status_options_hide_locked_for_status_style_tables
     Anomonitor.configure do |c|
       c.table :customer_jobs do |t|

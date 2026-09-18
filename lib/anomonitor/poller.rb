@@ -2,6 +2,7 @@
 
 require "singleton"
 require "fileutils"
+require "json"
 
 module Anomonitor
   class Poller
@@ -30,19 +31,28 @@ module Anomonitor
       end
     end
 
-    def stop
-      thread = nil
-      @mutex.synchronize do
-        @running = false
-        thread = @thread
-        @thread = nil
-      end
-      return unless thread
+      def stop
+        thread = nil
+        @mutex.synchronize do
+          @running = false
+          thread = @thread
+          @thread = nil
+        end
+        return unless thread
 
-      # Prefer a cooperative stop over Thread#kill mid-insert/webhook
-      thread.join(Anomonitor.config.poll_interval.to_i + 5)
-      thread.kill if thread.alive?
-    end
+        # Prefer a cooperative stop over Thread#kill mid-insert/webhook
+        thread.join(Anomonitor.config.poll_interval.to_i + 5)
+        thread.kill if thread.alive?
+      end
+
+      # Drop in-memory tick state (cron web processes start empty).
+      def reset!
+        stop if @running
+        @collector_status = {}
+        @last_run_at = nil
+        @last_error = nil
+        @last_schema_drift_at = nil
+      end
 
     def tick
       PollLock.with_lock do
@@ -67,7 +77,7 @@ module Anomonitor
         running: @running,
         last_run_at: effective_last_run_at,
         last_error: @last_error,
-        collectors: @collector_status,
+        collectors: CollectorStatus.snapshot(@collector_status),
         poll_interval: Anomonitor.config.poll_interval,
         schema_drift_interval: Anomonitor.config.schema_drift_interval,
         poll_lock: Anomonitor.config.poll_lock
@@ -92,19 +102,23 @@ module Anomonitor
       end
     end
 
-    def collect_all
-      points = []
-      collectors.each do |name, collector|
-        result = Array(collector.collect)
-        @collector_status[name] = { ok: true, count: result.size, at: Time.current }
-        @last_schema_drift_at = Time.current if name == :schema_drift
-        points.concat(result)
-      rescue StandardError => e
-        @collector_status[name] = { ok: false, error: e.message, at: Time.current }
-        Anomonitor.logger.warn("[Anomonitor] Collector #{name} failed: #{e.message}")
+      def collect_all
+        points = []
+        collectors.each do |name, collector|
+          result = Array(collector.collect)
+          status = { ok: true, count: result.size, at: Time.current }
+          @collector_status[name] = status
+          @last_schema_drift_at = Time.current if name == :schema_drift
+          points.concat(result)
+          points << CollectorStatus.heartbeat_point(name, status)
+        rescue StandardError => e
+          status = { ok: false, count: 0, at: Time.current, error: e.message }
+          @collector_status[name] = status
+          points << CollectorStatus.heartbeat_point(name, status)
+          Anomonitor.logger.warn("[Anomonitor] Collector #{name} failed: #{e.message}")
+        end
+        points
       end
-      points
-    end
 
     def collectors
       list = {}
@@ -136,7 +150,7 @@ module Anomonitor
           source: p.source,
           metric: p.metric,
           value: p.value,
-          tags: p.tags,
+          tags: persist_tags(p.tags),
           sampled_at: p.sampled_at,
           created_at: Time.current,
           updated_at: Time.current
@@ -145,6 +159,14 @@ module Anomonitor
       Anomonitor::MetricSample.insert_all(rows)
     rescue StandardError => e
       Anomonitor.logger.warn("[Anomonitor] Failed to persist metrics: #{e.message}")
+    end
+
+    def persist_tags(tags)
+      hash = tags.is_a?(Hash) ? tags : {}
+      col = Anomonitor::MetricSample.columns_hash["tags"]
+      return hash if col && %i[json jsonb].include?(col.type)
+
+      JSON.generate(hash)
     end
 
     def prune_old_records

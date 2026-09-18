@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2
+
+- Cron poll persists a `poll_tick` heartbeat per collector so Jobs health shows "collector ok" (not "no poll yet") after `rails anomonitor:poll`
+- Custom table collectors always emit an untagged aggregate (and zeros when empty); Jobs cards sum per-tenant samples when no aggregate exists
+- Delayed Job / table metrics include `scheduled` (`run_at` in the future); live jobs label those rows `scheduled`
+
 ## 0.6.1
 
 - CI: allow `sqlite3 >= 2.1` for Rails 8; matrix Rails 7.1 / 7.2 / 8.0

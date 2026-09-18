@@ -3,7 +3,7 @@
 module Anomonitor
   class MetricsController < ApplicationController
     def index
-      @metrics = MetricSample.recent(24).order(sampled_at: :desc).limit(200)
+      @metrics = MetricSample.visible.recent(24).order(sampled_at: :desc).limit(200)
     end
 
     def export_json

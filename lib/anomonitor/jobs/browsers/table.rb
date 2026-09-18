@@ -101,6 +101,7 @@ module Anomonitor
         def delayed_status(record, cols)
           return "failed" if cols.include?("failed_at") && record.failed_at
           return "locked" if cols.include?("locked_at") && record.locked_at
+          return "scheduled" if cols.include?("run_at") && record.run_at && record.run_at > Time.current
 
           "pending"
         end

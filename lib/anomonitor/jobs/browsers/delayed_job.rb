@@ -115,6 +115,7 @@ module Anomonitor
         def status_for(job)
           return "failed" if job.respond_to?(:failed_at) && job.failed_at
           return "locked" if job.respond_to?(:locked_at) && job.locked_at
+          return "scheduled" if job.respond_to?(:run_at) && job.run_at && job.run_at > Time.current
 
           "pending"
         end

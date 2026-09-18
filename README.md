@@ -229,6 +229,8 @@ end
 
 `c.auto_start = false` is still supported and is equivalent to `poll_mode = :cron`.
 
+Cron ticks persist a `poll_tick` sample per collector. The Jobs dashboard reconstructs collector health from those samples, so it shows **collector ok** after `rails anomonitor:poll` (not **no poll yet**). `queue_depth` is due jobs (`run_at <= now`); future jobs are a separate `scheduled` metric.
+
 Samples and resolved anomalies older than `retention_days` are pruned (open schema-drift rows are kept until resolved).
 
 ## Dashboard

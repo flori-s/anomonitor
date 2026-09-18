@@ -23,6 +23,7 @@ require "anomonitor/collectors/schema_drift"
 require "anomonitor/collectors/table"
 require "anomonitor/jobs/row"
 require "anomonitor/jobs/browser"
+require "anomonitor/jobs/health"
 require "anomonitor/jobs/browsers/sidekiq"
 require "anomonitor/jobs/browsers/delayed_job"
 require "anomonitor/jobs/browsers/solid_queue"
@@ -36,6 +37,7 @@ require "anomonitor/notifiers/rate_limited"
 require "anomonitor/configuration_validator"
 require "anomonitor/metrics_export"
 require "anomonitor/poll_lock"
+require "anomonitor/collector_status"
 require "anomonitor/digester"
 require "anomonitor/detector"
 require "anomonitor/poller"
@@ -124,9 +126,10 @@ module Anomonitor
     self.table_name = "anomonitor_metric_samples"
 
     scope :recent, ->(hours = 24) { where("sampled_at >= ?", hours.hours.ago) }
+    scope :visible, -> { where.not(metric: %w[poll_tick]) }
 
     def self.latest_by_source_metric
-      recent(6).order(sampled_at: :desc).each_with_object({}) do |sample, hash|
+      visible.recent(6).order(sampled_at: :desc).each_with_object({}) do |sample, hash|
         key = [sample.source, sample.metric, sample.tags]
         hash[key] ||= sample
       end.values
@@ -321,6 +324,7 @@ class AnomonitorTestCase < Minitest::Test
   def setup
     Anomonitor.reset_config!
     Anomonitor.config.auto_start = false
+    Anomonitor::Poller.instance.reset!
     Anomonitor::MetricSample.delete_all
     Anomonitor::Anomaly.delete_all
     Anomonitor::Mute.delete_all

@@ -58,7 +58,7 @@ module Anomonitor
     def job_status_badge_class(status)
       case status.to_s
       when "failed" then "danger"
-      when "locked" then "warn"
+      when "locked", "scheduled" then "warn"
       when "pending" then "ok"
       else ""
       end

@@ -39,12 +39,14 @@ module Anomonitor
         tags = tenant ? { tenant: tenant } : {}
 
         pending = scope.where(failed_at: nil).where("run_at <= ?", now).where(locked_at: nil).count
+        scheduled = scope.where(failed_at: nil).where("run_at > ?", now).where(locked_at: nil).count
         failed = scope.where.not(failed_at: nil).count
         locked = scope.where.not(locked_at: nil).where(failed_at: nil).count
         total = scope.count
 
         [
           point(source: "delayed_job", metric: "queue_depth", value: pending, tags: tags),
+          point(source: "delayed_job", metric: "scheduled", value: scheduled, tags: tags),
           point(source: "delayed_job", metric: "failed", value: failed, tags: tags),
           point(source: "delayed_job", metric: "locked", value: locked, tags: tags),
           point(source: "delayed_job", metric: "total", value: total, tags: tags)

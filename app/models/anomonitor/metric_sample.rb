@@ -6,11 +6,14 @@ module Anomonitor
 
     validates :source, :metric, :value, :sampled_at, presence: true
 
+    INTERNAL_METRICS = %w[poll_tick].freeze
+
     scope :recent, ->(hours = 24) { where("sampled_at >= ?", hours.hours.ago) }
     scope :for_metric, ->(metric) { where(metric: metric) }
+    scope :visible, -> { where.not(metric: INTERNAL_METRICS) }
 
     def self.latest_by_source_metric
-      recent(6).order(sampled_at: :desc).each_with_object({}) do |sample, hash|
+      visible.recent(6).order(sampled_at: :desc).each_with_object({}) do |sample, hash|
         key = [sample.source, sample.metric, sample.tags]
         hash[key] ||= sample
       end.values

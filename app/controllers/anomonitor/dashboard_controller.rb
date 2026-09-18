@@ -55,7 +55,7 @@ module Anomonitor
     end
 
     def build_series
-      rows = MetricSample.recent(24).order(:sampled_at)
+      rows = MetricSample.visible.recent(24).order(:sampled_at)
       if @tenant
         rows = rows.select do |s|
           tags = s.tags

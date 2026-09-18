@@ -14,6 +14,7 @@
           <div class="label"><%= card[:source] %></div>
           <div class="am-health-metrics">
             <span>depth <strong><%= format_metric(card[:queue_depth]) %></strong></span>
+            <span>scheduled <strong><%= format_metric(card[:scheduled]) %></strong></span>
             <span>failed <strong><%= format_metric(card[:failed]) %></strong></span>
             <span>locked <strong><%= format_metric(card[:locked]) %></strong></span>
           </div>
@@ -24,6 +25,9 @@
               <span class="am-badge danger">collector error</span>
             <% else %>
               <span class="am-badge warn">no poll yet</span>
+            <% end %>
+            <% if card[:polled_at] %>
+              <span>· <%= time_ago_in_words(card[:polled_at]) %> ago</span>
             <% end %>
           </div>
           <% if card[:series].any? %>

@@ -53,5 +53,34 @@ class TableCollectorTest < AnomonitorTestCase
     assert_equal 1, acme_depth.value
     assert_equal 1, beta_locked.value
     assert_equal 1, acme_failed.value
+
+    aggregate_depth = points.find { |p| p.metric == "queue_depth" && p.tags[:tenant].nil? }
+    assert aggregate_depth, "expected untagged aggregate queue_depth"
+    assert_equal 1, aggregate_depth.value
+    assert_equal 3, points.find { |p| p.metric == "total" && p.tags[:tenant].nil? }.value
+  end
+
+  def test_delayed_job_style_emits_scheduled_and_zeros_when_empty
+    Anomonitor.configure do |c|
+      c.table :supp_jobs do |t|
+        t.model = "IndexJob"
+        t.style = :delayed_job
+        t.tenant = :tenant
+      end
+    end
+
+    source = Anomonitor.config.tables.first
+    empty = Anomonitor::Collectors::Table.new(source).collect
+    assert empty.any? { |p| p.metric == "queue_depth" && p.value.zero? && p.tags[:tenant].nil? }
+    assert empty.any? { |p| p.metric == "scheduled" && p.value.zero? }
+
+    IndexJob.create!(tenant: "acme", run_at: 1.hour.from_now, failed_at: nil, locked_at: nil, locked_by: nil)
+    IndexJob.create!(tenant: "acme", run_at: 1.minute.ago, failed_at: nil, locked_at: nil, locked_by: nil)
+
+    points = Anomonitor::Collectors::Table.new(source).collect
+    scheduled = points.find { |p| p.metric == "scheduled" && p.tags[:tenant].nil? }
+    depth = points.find { |p| p.metric == "queue_depth" && p.tags[:tenant].nil? }
+    assert_equal 1, scheduled.value
+    assert_equal 1, depth.value
   end
 end

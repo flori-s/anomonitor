@@ -9,12 +9,12 @@ module Anomonitor
 
       def collect
         klass = @source.model_class
-
-        if tenant_column?(klass)
-          collect_per_tenant(klass)
-        else
-          metrics_for(klass.all, nil)
-        end
+        points = []
+        points.concat(collect_per_tenant(klass)) if tenant_column?(klass)
+        # Always emit an untagged aggregate so cron Jobs health cards have totals
+        # (and zeros) even when the table is empty or only per-tenant rows exist.
+        points.concat(metrics_for(klass.all, nil))
+        points
       rescue NameError => e
         log_skip("model #{@source.model} not found: #{e.message}")
         []
@@ -94,8 +94,20 @@ module Anomonitor
             0
           end
 
+        scheduled = 0
+        if cols.include?("run_at")
+          sched = scope.where(failed_at: nil).where("run_at > ?", now)
+          if cols.include?("locked_by")
+            sched = sched.where(locked_by: nil)
+          elsif cols.include?("locked_at")
+            sched = sched.where(locked_at: nil)
+          end
+          scheduled = sched.count
+        end
+
         [
           point(source: source_name, metric: "queue_depth", value: pending.count, tags: tags),
+          point(source: source_name, metric: "scheduled", value: scheduled, tags: tags),
           point(source: source_name, metric: "failed", value: failed, tags: tags),
           point(source: source_name, metric: "locked", value: locked, tags: tags),
           point(source: source_name, metric: "total", value: scope.count, tags: tags)
